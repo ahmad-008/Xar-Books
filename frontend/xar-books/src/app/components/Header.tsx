@@ -142,7 +142,7 @@ const Header = () => {
 
   ]
 
-  const MenuItems = (className = '') => (
+  const MenuItems = ({ className = "" }: { className?: string }) => (
     <div className={className} >
       {menuItems?.map((item, index) =>
         item?.href ? (
