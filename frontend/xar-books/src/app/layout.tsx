@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import LayoutWrapper from "@/app/LayoutWrapper";
 
 const playfairDisplayHeading = Playfair_Display({ subsets: ['latin'], variable: '--font-heading' });
 
@@ -32,12 +33,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
 
-        <Header />
-
-        {children}
-
-        <Footer />
-
+        <LayoutWrapper>
+          <Header />
+          {children}
+          <Footer />
+        </LayoutWrapper>
 
       </body>
     </html>
