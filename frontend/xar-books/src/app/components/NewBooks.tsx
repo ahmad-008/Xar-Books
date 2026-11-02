@@ -55,7 +55,7 @@ function NewBooks() {
                                                             <Link href={`/books/${book._id}`} className='block h-full' >
                                                                 <div className='relative flex h-full flex-col' >
                                                                     <Image
-                                                                        src={book.images[0]}
+                                                                        src={book.images[0] || "/images/no-book.jpg"}
                                                                         alt={book.title}
                                                                         width={200}
                                                                         height={300}
