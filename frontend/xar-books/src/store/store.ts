@@ -1,12 +1,21 @@
 // we are using this like somehow if user's session is revoked and it will return the user history like their cart
 import { configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query/react";
-import storage from "redux-persist/lib/storage";
+import createWebStorage from "redux-persist/lib/storage/createWebStorage";
 import { persistReducer, persistStore, FLUSH, PURGE, REHYDRATE, PAUSE, REGISTER, PERSIST } from "redux-persist";
 import userReducer from '@/store/slice/userSlice';
 import { api } from "./api";
 
 
+
+// localStorage only exists in the browser; on the server use a no-op storage
+const createNoopStorage = () => ({
+    getItem: (_key: string) => Promise.resolve(null),
+    setItem: (_key: string, value: unknown) => Promise.resolve(value),
+    removeItem: (_key: string) => Promise.resolve(),
+});
+
+const storage = typeof window !== "undefined" ? createWebStorage("local") : createNoopStorage();
 
 //Persist Configuration for User
 const userPersistantConfig = {key:'user', storage, whitelist: ['user','isEmailVerified', 'isLoggedIn']}
