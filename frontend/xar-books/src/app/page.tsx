@@ -1,11 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { BookOpen, Camera, CreditCard, Library, Search, ShoppingBag, Store, Tag, Truck, Wallet } from "lucide-react";
+import { ArrowRight, BookOpen, Camera, CreditCard, Library, Search, ShoppingBag, Store, Tag, Truck, Wallet } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import NewBooks from "./components/NewBooks";
+import { Card, CardContent } from "@/components/ui/card";
 
 
 export default function Home() {
@@ -59,7 +60,7 @@ export default function Home() {
     },
     {
       step: "Step 3",
-      title: "Get paid into your UPI/Bank account",
+      title: "Get paid into your Bank account",
       description:
         "You will get money into your account once you receive an order for your book.",
       icon: <Wallet className="h-8 w-8 text-primary" />,
@@ -162,9 +163,133 @@ export default function Home() {
 
       </section>
 
-     
+      <NewBooks />
+      <Button size='lg'
+        className="flex mt-10 mb-10 mx-auto bg-green-500 px-8  py-6 rounded-xl"
+      >
+        <Link href='/books'>
+          <div className="text-sm">
+            Explore All Books
+          </div>
+        </Link>
+      </Button>
 
 
+
+      {/* How to Sell Section */}
+      <section className="py-16 bg-amber-50" >
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12" >
+            <h2 className="text-3xl font-bold mb-4" >
+              How to SELL your books online on XarBooks
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto" >
+              Earning money by selling your old books is just 3 steps away from you :)
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8 relative" >
+            <div className="hidden md:block absolute top-1/2 left-1/4 right-1/4 h-0.5 
+                border-t-2 border-dashed border-gray-300 -z-10" />
+
+            {sellSteps.map((step, index) => (
+              <div key={index} className="relative flex flex-col h-full" >
+                <div className="bg-white rounded-xl p-8 shadow-lg text-center grow flex flex-col" >
+                  <div className="absolute top-2 left-14 translate-x-1/2 bg-yellow-400 text-gray-900 px-4 py-1 
+                            rounded-full text-sm font-medium z-10" >
+                    {step.step}
+                  </div>
+
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" >
+                    {step.icon}
+                  </div>
+                  <h3 className="font-semibold mb-2" >{step.title}</h3>
+                  <p className="text-gray-600 text-sm grow" >{step.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How to buy section */}
+      <section className="py-16 bg-gray-50" >
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12" >
+            <h2 className="text-3xl font-bold mb-4" >
+              How to BUY used books online on XarBooks?
+            </h2>
+            <p className="text-gray-500 max-w-2xl mx-auto" >
+              Saving some good amount of money by buying used books is just 3 steps away from you :)
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8 relative" >
+            <div className="hidden md:block absolute top-1/2 left-1/4 right-1/4 h-0.5 
+                border-t-2 border-dashed border-gray-300 -z-10" />
+
+            {buySteps.map((step, index) => (
+              <div key={index} className="relative flex flex-col h-full" >
+                <div className="bg-yellow-400 rounded-xl p-8 shadow-lg text-center grow flex flex-col" >
+                  <div className="absolute top-2 left-14 translate-x-1/2 bg-white text-gray-900 px-4 py-1 
+                            rounded-full text-sm font-medium z-10" >
+                    {step.step}
+                  </div>
+
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" >
+                    {step.icon}
+                  </div>
+                  <h3 className="font-semibold mb-2" >{step.title}</h3>
+                  <p className="text-gray-600 text-sm grow" >{step.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+
+      {/* blog post */}
+      <section className="py-16 bg-[rgb(221,234,254)]" >
+        <div className="container mx-auto px-4" >
+          <h2 className="text-3xl font-bold text-center mb-12">
+            Read from our <span className="text-primary">Blog</span>
+          </h2>
+        <div className="grid md:grid-cols-3 gap-8">
+            {blogPosts.map((post,index)=>(
+                <Card
+                  key={index}
+                  className="h-full flex flex-col overflow-hidden py-0 gap-0 transition-all duration-300"
+                
+                >
+                  <CardContent className="p-0 flex flex-col h-full" >
+                      <div className="relative h-48 overflow-hidden" >
+                          <Image
+                            src={post.imageSrc}
+                            alt={post.title}
+                            fill
+                            className="object-cover transition-transform duration-300 hover:scale-110"
+                          />
+                      </div>
+                      <div className="p-6 flex-col flex grow" >
+                        <h3 className="tex-xl font-smeibold mb-2 flex items-center gap-2" >
+                            <div className="bg-primary/10 p-2 rounded-full" >
+                                {post.icon}
+                            </div>
+                            <span className="grow" >{post.title}</span>
+                        </h3>
+                        <p className="text-gray-600 text-sm grow" >{post.description}</p>
+                        <Button variant='link' className="mt-4 p-0 items-center text-primary" >
+                          Read More <ArrowRight className="w-4 h-4" />
+                        </Button>
+                      
+                      </div>
+                  </CardContent>
+
+                </Card>
+            ))}
+        </div>
+        </div>
+
+      </section>
 
     </main>
   );
