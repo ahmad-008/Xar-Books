@@ -28,7 +28,8 @@ const filterGroups: { key: FilterKey; label: string }[] = [
 
 const BooksContent = () => {
     const searchParams = useSearchParams();
-    const searchTerm = (searchParams.get("search") || "").toLowerCase();
+    const searchTerm = (searchParams.get("search") || "").trim().toLowerCase();
+    const searchWords = searchTerm.split(/\s+/).filter(Boolean);
 
     const [currentPage, setCurrentPage] = useState(1);
     const [sortOption, setSortOption] = useState("newest");
@@ -38,6 +39,12 @@ const BooksContent = () => {
         category: [],
     });
 
+    // a new search should always start from the first page
+    const [lastSearchTerm, setLastSearchTerm] = useState(searchTerm);
+    if (lastSearchTerm !== searchTerm) {
+        setLastSearchTerm(searchTerm);
+        setCurrentPage(1);
+    }
 
     const toggleFilter = (key: FilterKey, value: string) => {
         setSelectedFilters((prev) => ({
@@ -55,11 +62,11 @@ const BooksContent = () => {
             selectedFilters[key].length === 0 || selectedFilters[key].includes(book[key]);
 
 
-        const matchesSearch =
-            !searchTerm ||
-            [book.title, book.author, book.category, book.subject].some((field) =>
-                field.toLowerCase().includes(searchTerm)
-            );
+        // every word typed must appear somewhere in the book's text, in any order
+        const searchableText = [book.title, book.author, book.category, book.subject]
+            .join(" ")
+            .toLowerCase();
+        const matchesSearch = searchWords.every((word) => searchableText.includes(word));
 
         return matchesFilter("condition") && matchesFilter("classType") && matchesFilter("category") && matchesSearch;
 
@@ -134,9 +141,19 @@ const BooksContent = () => {
                     {/* Books */}
                     <section>
                         <div className="mb-6 flex items-center justify-between" >
-                            <p className="text-sm text-muted-foreground" >
-                                {sortedBooks.length} {sortedBooks.length === 1 ? "book" : "books"} found
-                            </p>
+                            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground" >
+                                <span>
+                                    {sortedBooks.length} {sortedBooks.length === 1 ? "book" : "books"} found
+                                    {searchTerm && (
+                                        <> for <span className="font-semibold text-gray-900">&quot;{searchTerm}&quot;</span></>
+                                    )}
+                                </span>
+                                {searchTerm && (
+                                    <Link href="/books" className="text-orange-600 hover:underline">
+                                        Clear search
+                                    </Link>
+                                )}
+                            </div>
 
                             <Select value={sortOption} onValueChange={setSortOption} >
                                 <SelectTrigger className="w-48" >
@@ -243,7 +260,7 @@ const BooksContent = () => {
                             </>
                         ) : (
                             <NoData
-                                message="No books found"
+                                message={searchTerm ? `No books found for "${searchTerm}"` : "No books found"}
                                 description="Try changing your filters or search term."
                             />
                         )

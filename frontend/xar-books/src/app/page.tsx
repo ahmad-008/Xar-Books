@@ -124,36 +124,32 @@ export default function Home() {
           </h1>
           <div className="flex flex-col sm:flex-row gap-6">
             <Button size='lg'
-              className="group bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 to-green-600 text-white px-8 rounded-lg"
+              asChild
+              className="group bg-linear-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-white px-8 rounded-lg normal-case tracking-normal"
             >
-              <div className="flex items-center gap-3">
-                <div className="bg-white/20 p-2 rounded-lg group-hover:bg-white/30 transition-colors" >
-                  <ShoppingBag className="h-6 w-6" />
-                </div>
-                <Link href='/books'>
-                  <div className="font-semibold">
-                    Buy Books
+              <Link href='/books' >
+                <div className="flex items-center gap-3">
+                  <div className="bg-white/20 p-2 rounded-lg group-hover:bg-white/30 transition-colors" >
+                    <ShoppingBag className="h-6 w-6" />
                   </div>
-                </Link>
-
-              </div>
+                  <span className="font-semibold">Buy Books</span>
+                </div>
+              </Link>
             </Button>
 
 
             <Button size='lg'
-              className="group bg-gradient-to-r from-red-400 to-red-500 hover:from-red-500 to-red-600 text-white px-8 rounded-lg"
+              asChild
+              className="group bg-linear-to-r from-red-400 to-red-500 hover:from-red-500 hover:to-red-600 text-white px-8 rounded-lg normal-case tracking-normal"
             >
-              <div className="flex items-center gap-3">
-                <div className="bg-white/20 p-2 rounded-lg group-hover:bg-white/30 transition-colors" >
-                  <ShoppingBag className="h-6 w-6" />
-                </div>
-                <Link href='/book-sell'>
-                  <div className="font-semibold">
-                    Sell Books
+              <Link href='/book-sell' >
+                <div className="flex items-center gap-3">
+                  <div className="bg-white/20 p-2 rounded-lg group-hover:bg-white/30 transition-colors" >
+                    <ShoppingBag className="h-6 w-6" />
                   </div>
-                </Link>
-
-              </div>
+                  <span className="font-semibold">Sell Books</span>
+                </div>
+              </Link>
             </Button>
 
           </div>
@@ -165,13 +161,10 @@ export default function Home() {
 
       <NewBooks />
       <Button size='lg'
-        className="flex mt-10 mb-10 mx-auto bg-green-500 px-8  py-6 rounded-xl"
+        asChild
+        className="flex mt-10 mb-10 mx-auto w-fit bg-green-500 hover:bg-green-600 px-8 py-6 rounded-xl normal-case tracking-normal"
       >
-        <Link href='/books'>
-          <div className="text-sm">
-            Explore All Books
-          </div>
-        </Link>
+        <Link href='/books'>Explore All Books</Link>
       </Button>
 
 

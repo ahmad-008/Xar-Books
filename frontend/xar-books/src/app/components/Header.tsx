@@ -19,6 +19,15 @@ const Header = () => {
   const [isDropDownOpen, setIsDropDownOpen] = useState(false)
 
   const router = useRouter()
+  const [searchTerm, setSearchTerm] = useState('')
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    const term = searchTerm.trim()
+    // an empty search simply shows all books
+    router.push(term ? `/books?search=${encodeURIComponent(term)}` : '/books')
+  }
+
   const dispatch = useDispatch()
   const isLoginOpen = useSelector((state: RootState) => state.user.isLoggedIn)
 
@@ -200,16 +209,17 @@ const Header = () => {
 
         <div className='flex flex-1 items-center justify-center max-w-xl px-4'>
 
-          <div className='relative w-full' >
+          <form onSubmit={handleSearch} className='relative w-full' >
             <Input
               type='text'
               placeholder='Book Name / Author / Subject / Publisher'
               className='w-full pr-10'
-              value=''
-              onChange={() => { }}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
 
             />
             <Button
+              type='submit'
               size='icon'
               variant='ghost'
               className='absolute right-0 top-1/2 -translate-y-1/2'
@@ -217,7 +227,7 @@ const Header = () => {
               <Search className='h-5 w-5' />
             </Button>
 
-          </div>
+          </form>
 
         </div>
 
@@ -320,16 +330,17 @@ const Header = () => {
 
         <div className='flex flex-1 items-center justify-center max-w-xl px-4'>
 
-          <div className='relative w-full' >
+          <form onSubmit={handleSearch} className='relative w-full' >
             <Input
               type='text'
               placeholder='Search Books...'
               className='w-full pr-10'
-              value=''
-              onChange={() => { }}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
 
             />
             <Button
+            type='submit'
               size='icon'
               variant='ghost'
               className='absolute right-0 top-1/2 -translate-y-1/2'
@@ -337,7 +348,7 @@ const Header = () => {
               <Search className='h-5 w-5' />
             </Button>
 
-          </div>
+          </form>
 
         </div>
 
