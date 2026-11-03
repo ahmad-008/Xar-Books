@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { Headset, Lock, ShieldCheck } from 'lucide-react';
 import { FaFacebook, FaInstagram, FaXTwitter, FaYoutube } from 'react-icons/fa6';
 import { FaCcAmex, FaCcMastercard, FaCcStripe, FaCcVisa } from 'react-icons/fa';
 
@@ -41,12 +40,6 @@ function Footer() {
     { icon: FaYoutube, href: 'https://youtube.com', label: 'YouTube' },
   ];
 
-  const trustFeatures = [
-    { icon: Lock, title: 'Secure Payment', description: '100% secure payments powered by Stripe' },
-    { icon: ShieldCheck, title: 'Xar Books Trust', description: 'Money back guarantee if a book is not as described' },
-    { icon: Headset, title: 'Customer Support', description: 'Friendly support team, here to help you' },
-  ];
-
   const paymentIcons = [FaCcVisa, FaCcMastercard, FaCcAmex, FaCcStripe];
 
 
@@ -83,6 +76,7 @@ function Footer() {
                   key={label}
                   href={href}
                   target='_blank'
+                  rel='noopener noreferrer'
                   aria-label={label}
                   className='transition-colors hover:text-white'
 
@@ -97,25 +91,6 @@ function Footer() {
               Xar Books is a marketplace to buy and sell used books at the best prices.
             </p>
           </div>
-        </div>
-
-        <div className='mt-12 grid grid-cols-1 gap-6 border-t border-gray-700 pt-8 md:grid-cols-3' >
-          {trustFeatures.map(({ icon: Icon, title, description }) => (
-            <div key={title} className='flex items-center gap-4'>
-              <div className='rounded-full bg-gray-800 p-3' >
-                <Icon className='h-6 w-6 text-white' />
-              </div>
-              <div>
-                <h4 className="font-semibold text-white">{title}</h4>
-                <p className="text-sm">{description}</p>
-              </div>
-            </div>
-          ))
-
-          }
-
-
-
         </div>
 
         <div className='mt-12 flex flex-col items-center justify-between gap-4
