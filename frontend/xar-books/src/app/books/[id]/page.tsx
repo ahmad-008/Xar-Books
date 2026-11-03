@@ -59,6 +59,7 @@ const BookDetailsPage = () => {
                 {/* Breadcrumb */}
                 <nav className="mb-6 flex items-center gap-2 text-sm text-muted-foreground" >
                     <Link href='/' className="hover:text-primary" >Home</Link>
+                    <span>/</span>
                     <Link href="/books" className="hover:text-primary">Books</Link>
                     <span>/</span>
                     <span className="text-gray-900">{book.title}</span>
@@ -146,7 +147,7 @@ const BookDetailsPage = () => {
                             <div className="flex items-baseline gap-3" >
                                 <span className="text-3xl font-bold" >${book.finalPrice}</span>
                                 {book.price > book.finalPrice && (
-                                    <span className="text-lg text-muted-foreground line-through" >{book.price}</span>
+                                    <span className="text-lg text-muted-foreground line-through" >${book.price}</span>
                                 )
 
                                 }
