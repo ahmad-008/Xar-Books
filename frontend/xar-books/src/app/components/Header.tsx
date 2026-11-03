@@ -13,6 +13,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import AuthPage from './AuthPage';
+
+
+
+
+
 
 const Header = () => {
 
@@ -29,13 +35,11 @@ const Header = () => {
   }
 
   const dispatch = useDispatch()
-  const isLoginOpen = useSelector((state: RootState) => state.user.isLoggedIn)
+  const isLoginDialogOpen = useSelector((state: RootState) => state.user.isLoginDialogOpen)
 
-  const user = {
-    profilePicture: "",
-    name: "",
-    email: "",
-  }
+  const user = useSelector((state: RootState) => state.user.user)
+
+
 
   const userPlacholder = "";
 
@@ -64,7 +68,7 @@ const Header = () => {
   }
 
   const menuItems = [
-    ...(user && user ? [
+    ...(user ? [
       {
         href: 'account/profile',
         content: (
@@ -141,17 +145,17 @@ const Header = () => {
       href: '/how-it-works',
     },
 
-    ...(user && [
+    ...(user ? [
       {
         icon: <LogOut className='h-5 w-5 ' />,
         label: "Logout",
         onclick: handleLogout,
-      },
-    ])
+      },] : [])
+
 
   ]
 
-  const MenuItems = ({ className = "" }: { className?: string }) => (
+  const renderMenuItems= (className="") => (
     <div className={className} >
       {menuItems?.map((item, index) =>
         item?.href ? (
@@ -172,7 +176,10 @@ const Header = () => {
           <button
             key={index}
             className='flex w-full items-center gap-3 px-4 py-3 text-sm rounded-lg hover:bg-gray-200'
-            onClick={() => setIsDropDownOpen(false)}
+            onClick={() => {
+              item.onclick?.()
+              setIsDropDownOpen(false)
+            }}
           >
             {item.icon}
             <span>
@@ -256,7 +263,7 @@ const Header = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className='w-80 p-2' >
-              <MenuItems />
+              {renderMenuItems()}
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -312,7 +319,7 @@ const Header = () => {
               </Link>
 
             </div>
-            <MenuItems className="py-2" />
+            {renderMenuItems("py-2")}
           </SheetContent>
         </Sheet>
 
@@ -340,7 +347,7 @@ const Header = () => {
 
             />
             <Button
-            type='submit'
+              type='submit'
               size='icon'
               variant='ghost'
               className='absolute right-0 top-1/2 -translate-y-1/2'
@@ -366,7 +373,10 @@ const Header = () => {
 
       </div>
 
-
+      <AuthPage
+        isLoginOpen={isLoginDialogOpen}
+        setIsLoginOpen={() => dispatch(toggleLoginDialog())}
+      />
 
     </header>
 
