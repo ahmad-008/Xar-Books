@@ -155,7 +155,7 @@ const Header = () => {
 
   ]
 
-  const MenuItems = ({ className = "" }: { className?: string }) => (
+  const renderMenuItems= (className="") => (
     <div className={className} >
       {menuItems?.map((item, index) =>
         item?.href ? (
@@ -263,7 +263,7 @@ const Header = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className='w-80 p-2' >
-              <MenuItems />
+              {renderMenuItems()}
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -319,7 +319,7 @@ const Header = () => {
               </Link>
 
             </div>
-            <MenuItems className="py-2" />
+            {renderMenuItems("py-2")}
           </SheetContent>
         </Sheet>
 
