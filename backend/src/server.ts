@@ -2,6 +2,11 @@ import "dotenv/config";
 import express, { Request, Response } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import connectDB from "./config/db";
+import { errorHandler, notFound } from "./middleware/errorHandler";
+
+
+
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -26,10 +31,26 @@ app.use(cookieParser());
 
 
 // a simple route to check the server is alive
-app.get("/api/health", (_req:Request, res:Response) => {
-    res.json({success: true, message: " Xar Books API is running"});
+app.get("/api/health", (_req: Request, res: Response) => {
+    res.json({ success: true, message: "Xar Books API is running"});
 });
 
-app.listen(PORT, ()=>{
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+app.use(notFound);
+app.use(errorHandler);
+
+
+const startServer = async () => {
+    try {
+        await connectDB();
+
+        app.listen(PORT, () => {
+            console.log(`Server running on http://localhost:${PORT}`);})
+
+        } catch (error) {
+            console.error("Failed to start server:", error);
+            process.exit(1);
+
+        }
+    };
+    startServer();
+
