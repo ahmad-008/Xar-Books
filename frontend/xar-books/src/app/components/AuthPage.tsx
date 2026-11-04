@@ -16,6 +16,11 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { useDispatch } from "react-redux";
+import toast from "react-hot-toast";
+import { useForgotPasswordMutation, useLoginMutation, useRegisterMutation } from "@/store/api";
+import { authStatus, AuthUser, setEmailVerified, setUser } from "@/store/slice/userSlice";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 
 
@@ -48,10 +53,16 @@ interface ForgotPasswordFormData {
 
 
 const AuthPage = ({ isLoginOpen, setIsLoginOpen }: AuthPageProps) => {
-    const [currentTab, setCurrentTab] = useState<AuthTab>("login");
+    const dispatch = useDispatch();
 
+    const [login, { isLoading: loginLoading }] = useLoginMutation();
+    const [signup, { isLoading: signupLoading }] = useRegisterMutation();
+    const [forgotPassword, { isLoading: forgotLoading }] = useForgotPasswordMutation();
+
+    const [currentTab, setCurrentTab] = useState<AuthTab>("login");
     const [showPassword, setShowPassword] = useState(false);
-    const [loginLoading, setLoginLoading] = useState(false);
+    // true after the reset email is sent, so we show a success message instead of the form
+    const [forgotSuccess, setForgotSuccess] = useState(false);
 
     const {
         register: registerLogin,
@@ -59,16 +70,6 @@ const AuthPage = ({ isLoginOpen, setIsLoginOpen }: AuthPageProps) => {
         reset: resetLogin,
         formState: { errors: loginErrors },
     } = useForm<LoginFormData>();
-
-
-    const onSubmitLogin = async (data: LoginFormData) => {
-        setLoginLoading(true);
-        // TODO (backend phase): call the login API here
-        console.log("login data:", data);
-        setLoginLoading(false);
-    };
-
-    const [signupLoading, setSignupLoading] = useState(false);
 
     const {
         register: registerSignup,
@@ -78,31 +79,12 @@ const AuthPage = ({ isLoginOpen, setIsLoginOpen }: AuthPageProps) => {
         formState: { errors: signupErrors },
     } = useForm<SignupFormData>({ defaultValues: { agreeTerms: false } });
 
-    const onSubmitSignup = async (data: SignupFormData) => {
-        setSignupLoading(true);
-        // TODO (backend phase): call the register API here
-        console.log("signup data:", data);
-        setSignupLoading(false);
-    };
-
-    const [forgotLoading, setForgotLoading] = useState(false);
-    // true after the reset email is "sent", so we show a success message instead of the form
-    const [forgotSuccess, setForgotSuccess] = useState(false);
-
     const {
         register: registerForgot,
         handleSubmit: handleForgotSubmit,
         reset: resetForgot,
         formState: { errors: forgotErrors },
     } = useForm<ForgotPasswordFormData>();
-
-    const onSubmitForgot = async (data: ForgotPasswordFormData) => {
-        setForgotLoading(true);
-        // TODO (backend phase): call the forgot-password API here
-        console.log("forgot password data:", data);
-        setForgotLoading(false);
-        setForgotSuccess(true);
-    };
 
     // every time the dialog closes, start fresh: Login tab, empty forms, no errors
     const handleOpenChange = (open: boolean) => {
@@ -114,6 +96,43 @@ const AuthPage = ({ isLoginOpen, setIsLoginOpen }: AuthPageProps) => {
             resetLogin();
             resetSignup();
             resetForgot();
+        }
+    };
+
+    // the server has set the login cookie: remember the user and close the dialog
+    const finishAuth = (user: AuthUser) => {
+        dispatch(setUser(user));
+        dispatch(setEmailVerified(user.isEmailVerified));
+        dispatch(authStatus());
+        handleOpenChange(false);
+    };
+
+    const onSubmitLogin = async (data: LoginFormData) => {
+        try {
+            const user = await login(data).unwrap();
+            finishAuth(user);
+            toast.success(`Welcome back, ${user.name}`);
+        } catch (error) {
+            toast.error(getApiErrorMessage(error));
+        }
+    };
+
+    const onSubmitSignup = async (data: SignupFormData) => {
+        try {
+            const user = await signup(data).unwrap();
+            finishAuth(user);
+            toast.success(`Welcome to Xar Books, ${user.name}`);
+        } catch (error) {
+            toast.error(getApiErrorMessage(error));
+        }
+    };
+
+    const onSubmitForgot = async (data: ForgotPasswordFormData) => {
+        try {
+            await forgotPassword(data).unwrap();
+            setForgotSuccess(true);
+        } catch (error) {
+            toast.error(getApiErrorMessage(error));
         }
     };
 
