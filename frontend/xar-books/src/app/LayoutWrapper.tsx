@@ -6,6 +6,7 @@ import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import {BookLoader } from "@/lib/BookLoader"; 
 import { Toaster } from 'react-hot-toast';
+import SessionCheck from "@/app/components/SessionCheck";
 
 
 export default function LayoutWrapper({children}:{children:React.ReactNode}){
@@ -13,6 +14,7 @@ export default function LayoutWrapper({children}:{children:React.ReactNode}){
         <Provider store={store} >
             <PersistGate loading={<BookLoader />}  persistor={persistor}>
                 <Toaster/>
+                <SessionCheck />
                 {children}
             </PersistGate>
         </Provider>
