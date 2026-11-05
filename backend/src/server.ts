@@ -4,7 +4,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import connectDB from "./config/db";
 import { errorHandler, notFound } from "./middleware/errorHandler";
-
+import authRoutes from "./routes/auth.routes";
 
 
 
@@ -34,6 +34,9 @@ app.use(cookieParser());
 app.get("/api/health", (_req: Request, res: Response) => {
     res.json({ success: true, message: "Xar Books API is running"});
 });
+
+//Signup route
+app.use("/api/auth", authRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
