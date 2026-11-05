@@ -5,16 +5,13 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { getApiErrorMessage } from '@/lib/apiError';
-import { api, useLogoutMutation } from '@/store/api';
-import { logout, toggleLoginDialog } from '@/store/slice/userSlice';
+import { toggleLoginDialog } from '@/store/slice/userSlice';
 import { RootState } from '@/store/store';
 import { BookLock, ChevronRight, FileTerminal, Heart, HelpCircle, Lock, LogOut, Menu, Package, PiggyBank, Search, ShoppingCart, User, User2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 import AuthPage from './AuthPage';
 
@@ -26,12 +23,6 @@ import AuthPage from './AuthPage';
 const Header = () => {
 
   const [isDropDownOpen, setIsDropDownOpen] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-
-  const closeMenus = () => {
-    setIsDropDownOpen(false)
-    setIsMobileMenuOpen(false)
-  }
 
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
@@ -50,12 +41,7 @@ const Header = () => {
 
 
 
-  const [logoutRequest] = useLogoutMutation()
-
-  // the user's initials, shown when they have no profile picture
-  const userPlacholder = user
-    ? user.name.split(' ').filter(Boolean).slice(0, 2).map((word) => word[0].toUpperCase()).join('')
-    : '';
+  const userPlacholder = "";
 
   const handleLoginCLick = () => {
     dispatch(toggleLoginDialog())
@@ -77,28 +63,19 @@ const Header = () => {
 
   }
 
-  const handleLogout = async () => {
-    try {
-      // the cookie is httpOnly, so only the server can remove it
-      await logoutRequest().unwrap()
-      dispatch(logout())
-      dispatch(api.util.resetApiState())
-      router.push('/')
-      toast.success('Logged out')
-    } catch (error) {
-      toast.error(getApiErrorMessage(error))
-    }
+  const handleLogout = () => {
+
   }
 
   const menuItems = [
     ...(user ? [
       {
-        href: '/account/profile',
+        href: 'account/profile',
         content: (
           <div className='flex space-x-4 items-center p-2 border-b' >
             <Avatar className='w-12 h-12 -ml-2 rounded-full' >
               {user?.profilePicture ? (
-                <AvatarImage src={user.profilePicture} alt='user_image'></AvatarImage>
+                <AvatarImage alt='user_image'></AvatarImage>
               ) : (
                 <AvatarFallback>{userPlacholder}</AvatarFallback>
               )}
@@ -186,7 +163,7 @@ const Header = () => {
             key={index}
             href={item.href}
             className='flex items-center gap-3 px-4 py-3 text-sm rounded-lg hover:bg-gray-200'
-            onClick={closeMenus}
+            onClick={() => setIsDropDownOpen(false)}
           >
             {item.icon}
             <span>
@@ -201,7 +178,7 @@ const Header = () => {
             className='flex w-full items-center gap-3 px-4 py-3 text-sm rounded-lg hover:bg-gray-200'
             onClick={() => {
               item.onclick?.()
-              closeMenus()
+              setIsDropDownOpen(false)
             }}
           >
             {item.icon}
@@ -273,7 +250,7 @@ const Header = () => {
               <Button variant='ghost' className='normal-case tracking-normal' >
                 <Avatar className='w-8 h-8 rounded-full' >
                   {user?.profilePicture ? (
-                    <AvatarImage src={user.profilePicture} alt='user_image'></AvatarImage>
+                    <AvatarImage alt='user_image'></AvatarImage>
                   ) : userPlacholder ? (
                     <AvatarFallback>{userPlacholder}</AvatarFallback>
                   ) : (
@@ -296,6 +273,9 @@ const Header = () => {
                 <ShoppingCart className='h-5 w-5 mr-2' />
                 Cart
               </Button>
+              {user && (
+                <span className='absolute top-2 left-7 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full px-1 text-xs' >3</span>
+              )}
             </div>
           </Link>
 
@@ -317,7 +297,7 @@ const Header = () => {
 
       <div className='container mx-auto flex lg:hidden items-center justify-between p-4 ' >
 
-        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+        <Sheet>
           <SheetTrigger asChild >
             <Button variant='ghost' size='icon'>
               <Menu className='h-6 w-6' />
@@ -328,7 +308,7 @@ const Header = () => {
               <SheetTitle className='sr-only'></SheetTitle>
             </SheetHeader>
             <div className='border-b p-4' >
-              <Link href="/" onClick={closeMenus}>
+              <Link href="/">
                 <Image
                   src='/images/web-logo.svg'
                   alt='mobile_logo'
@@ -385,6 +365,9 @@ const Header = () => {
             <Button variant='ghost' className='relative normal-case tracking-normal'>
               <ShoppingCart className='h-5 w-5 mr-2' />
             </Button>
+            {user && (
+              <span className='absolute top-2 left-7 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full px-1 text-xs' >3</span>
+            )}
           </div>
         </Link>
 

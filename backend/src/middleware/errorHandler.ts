@@ -1,5 +1,4 @@
 import { NextFunction, Request, Response } from "express";
-import mongoose from "mongoose";
 import { AppError } from "../utils/AppError";
 
 
@@ -25,21 +24,6 @@ export const errorHandler = (
     // the request body was broken JSON
     if (err instanceof SyntaxError && "body" in err){
         res.status(400).json({success: false, message: "Invalid JSON in request body"});
-        return;
-    }
-
-    // the unique rule in the database rejected a duplicate. This is safer than checking
-    // first, because two signups at the same moment could both pass a check.
-    // users.email is the only unique field so far.
-    if (typeof err === "object" && err !== null && "code" in err && err.code === 11000) {
-        res.status(409).json({success: false, message: "An account with this email already exists"});
-        return;
-    }
-
-    // a rule in a mongoose model failed
-    if (err instanceof mongoose.Error.ValidationError) {
-        const firstError = Object.values(err.errors)[0];
-        res.status(400).json({success: false, message: firstError?.message ?? "Invalid data"});
         return;
     }
 
