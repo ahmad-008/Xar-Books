@@ -127,8 +127,4 @@
   html {
     @apply font-sans;
   }
-  /* Edge adds its own show-password eye, and our forms already have one */
-  input::-ms-reveal {
-    display: none;
-  }
 }
