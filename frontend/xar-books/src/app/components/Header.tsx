@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { toggleLoginDialog } from '@/store/slice/userSlice';
+import { logout  , toggleLoginDialog } from '@/store/slice/userSlice';
 import { RootState } from '@/store/store';
 import { BookLock, ChevronRight, FileTerminal, Heart, HelpCircle, Lock, LogOut, Menu, Package, PiggyBank, Search, ShoppingCart, User, User2 } from 'lucide-react';
 import Image from 'next/image';
@@ -14,6 +14,10 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import AuthPage from './AuthPage';
+import toast from 'react-hot-toast';
+import { useLogoutMutation } from '@/store/api';
+
+
 
 
 
@@ -41,7 +45,18 @@ const Header = () => {
 
 
 
-  const userPlacholder = "";
+  const userPlacholder = user?.name
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .slice(0,2)
+      .toUpperCase() ?? "";
+  
+
+
+
+
+
 
   const handleLoginCLick = () => {
     dispatch(toggleLoginDialog())
@@ -63,14 +78,24 @@ const Header = () => {
 
   }
 
-  const handleLogout = () => {
+  const [logoutUser] = useLogoutMutation()
 
+  const handleLogout = async () => {
+      try{
+        await logoutUser().unwrap()
+        dispatch(logout())
+        toast.success("Logged out")
+        router.push('/')
+
+      } catch {
+        toast.error("Could not log out, please try again")
+      }
   }
 
   const menuItems = [
     ...(user ? [
       {
-        href: 'account/profile',
+        href: '/account/profile',
         content: (
           <div className='flex space-x-4 items-center p-2 border-b' >
             <Avatar className='w-12 h-12 -ml-2 rounded-full' >
