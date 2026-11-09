@@ -20,6 +20,7 @@ import { useDispatch } from "react-redux";
 import toast from "react-hot-toast";
 import { useForgotPasswordMutation, useLoginMutation, useRegisterMutation } from "@/store/api";
 import { authStatus, setUser } from "@/store/slice/userSlice";
+import { getErrorMessage } from "@/lib/getErrorMessage";
 
 
 
@@ -48,14 +49,6 @@ interface ForgotPasswordFormData {
     email: string;
 }
 
-
-const getErrorMessage = (error: unknown) => {
-    if (typeof error === "object" && error !== null && "data" in error) {
-        const data = (error as {data?: {message?: string}}).data;
-        if (data?.message) return data.message;
-    }
-    return "Something went wrong, please try again";
-}
 
 
 const AuthPage = ({ isLoginOpen, setIsLoginOpen }: AuthPageProps) => {
