@@ -16,7 +16,10 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-
+import { useDispatch } from "react-redux";
+import toast from "react-hot-toast";
+import { useForgotPasswordMutation, useLoginMutation, useRegisterMutation } from "@/store/api";
+import { authStatus, setUser } from "@/store/slice/userSlice";
 
 
 
@@ -46,12 +49,22 @@ interface ForgotPasswordFormData {
 }
 
 
+const getErrorMessage = (error: unknown) => {
+    if (typeof error === "object" && error !== null && "data" in error) {
+        const data = (error as {data?: {message?: string}}).data;
+        if (data?.message) return data.message;
+    }
+    return "Something went wrong, please try again";
+}
+
 
 const AuthPage = ({ isLoginOpen, setIsLoginOpen }: AuthPageProps) => {
     const [currentTab, setCurrentTab] = useState<AuthTab>("login");
 
     const [showPassword, setShowPassword] = useState(false);
-    const [loginLoading, setLoginLoading] = useState(false);
+
+    const dispatch = useDispatch();
+    const [login, {isLoading: loginLoading}] = useLoginMutation();
 
     const {
         register: registerLogin,
@@ -62,13 +75,18 @@ const AuthPage = ({ isLoginOpen, setIsLoginOpen }: AuthPageProps) => {
 
 
     const onSubmitLogin = async (data: LoginFormData) => {
-        setLoginLoading(true);
-        // TODO (backend phase): call the login API here
-        console.log("login data:", data);
-        setLoginLoading(false);
+        try {
+            const result = await login(data).unwrap();
+            dispatch(setUser(result.data));
+            dispatch(authStatus());
+            toast.success("Logged in successfully");
+            handleOpenChange(false);
+        } catch (error) {
+            toast.error(getErrorMessage(error));
+        }
     };
 
-    const [signupLoading, setSignupLoading] = useState(false);
+    const [registerUser, {isLoading: signupLoading}] = useRegisterMutation();
 
     const {
         register: registerSignup,
@@ -79,13 +97,19 @@ const AuthPage = ({ isLoginOpen, setIsLoginOpen }: AuthPageProps) => {
     } = useForm<SignupFormData>({ defaultValues: { agreeTerms: false } });
 
     const onSubmitSignup = async (data: SignupFormData) => {
-        setSignupLoading(true);
-        // TODO (backend phase): call the register API here
-        console.log("signup data:", data);
-        setSignupLoading(false);
+        try {
+            await registerUser(data).unwrap();
+            toast.success("Account created! Please log in");
+            resetSignup();
+            setCurrentTab("login");
+        } catch (error) {
+            toast.error(getErrorMessage(error));
+        }
     };
 
-    const [forgotLoading, setForgotLoading] = useState(false);
+     const [forgotPassword, { isLoading: forgotLoading }] = useForgotPasswordMutation();
+
+
     // true after the reset email is "sent", so we show a success message instead of the form
     const [forgotSuccess, setForgotSuccess] = useState(false);
 
@@ -96,13 +120,15 @@ const AuthPage = ({ isLoginOpen, setIsLoginOpen }: AuthPageProps) => {
         formState: { errors: forgotErrors },
     } = useForm<ForgotPasswordFormData>();
 
-    const onSubmitForgot = async (data: ForgotPasswordFormData) => {
-        setForgotLoading(true);
-        // TODO (backend phase): call the forgot-password API here
-        console.log("forgot password data:", data);
-        setForgotLoading(false);
-        setForgotSuccess(true);
+        const onSubmitForgot = async (data: ForgotPasswordFormData) => {
+        try {
+            await forgotPassword(data).unwrap();
+            setForgotSuccess(true);
+        } catch (error) {
+            toast.error(getErrorMessage(error));
+        }
     };
+
 
     // every time the dialog closes, start fresh: Login tab, empty forms, no errors
     const handleOpenChange = (open: boolean) => {

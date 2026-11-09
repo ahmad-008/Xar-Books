@@ -1,11 +1,12 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import type {User} from "@/store/api";
 
 
 
 
 
 interface UserState {
-    user: any | null;
+    user: User | null;
     isEmailVerified : boolean;
     isLoginDialogOpen: boolean;
     isLoggedIn: boolean;
@@ -28,10 +29,10 @@ const userSlice = createSlice ({
 
     //it will use when user do any action on that state , the user value will be update on that state
     reducers:{
-        setUser:(state, action:PayloadAction<any>) => {
+        setUser:(state, action:PayloadAction<User>) => {
             state.user = action.payload;    
         },
-        setEmailVerified:(state, action:PayloadAction<any>)=> {
+        setEmailVerified:(state, action:PayloadAction<boolean>)=> {
             state.isEmailVerified = action.payload;
         },
         logout:(state)=>{
