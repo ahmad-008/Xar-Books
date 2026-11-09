@@ -78,3 +78,14 @@ export const logout = (_req: Request, res: Response) => {
     });
 
 };
+
+
+export const getMe = async (req: Request, res: Response) => {
+    const user = await User.findById(req.userId);
+
+    if (!user) {
+        throw new AppError("Please log in to continue",401);
+    }
+
+    res.json({success: true, data: toPublicUser(user)});
+};
