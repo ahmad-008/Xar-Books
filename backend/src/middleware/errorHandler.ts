@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "../utils/AppError";
-
+import mongoose from "mongoose";
 
 // runs when no route matched the request
 export const notFound = (req: Request , _res: Response, next: NextFunction) => {
@@ -26,6 +26,20 @@ export const errorHandler = (
         res.status(400).json({success: false, message: "Invalid JSON in request body"});
         return;
     }
+
+    // a schema rule failed, like a password that's too short
+    if (err instanceof mongoose.Error.ValidationError){
+        const firstError = Object.values(err.errors)[0];
+        res.status(400).json({ success: false, message: firstError?.message ?? "Invalid data" })
+        return;
+    }
+
+    // MongoDB rejected a duplicate value: email is our only unique field
+    if (typeof err === "object" && err !== null && "code" in err && err.code=== 11000){
+        res.status(409).json({ success: false, message: "An account with this email already exists" });
+        return;
+    }
+
 
      // anything unexpected: log it, but hide the details from the user
      console.error(err);
