@@ -9,13 +9,13 @@ import NewBooks from "./components/NewBooks";
 import { Card, CardContent } from "@/components/ui/card";
 
 
-export default function Home() {
+const bannerImages = [
+  "/images/book1.jpg",
+  "/images/book2.jpg",
+  "/images/book3.jpg",
+];
 
-  const bannerImages = [
-    "/images/book1.jpg",
-    "/images/book2.jpg",
-    "/images/book3.jpg",
-  ];
+export default function Home() {
 
   const blogPosts = [
     {
