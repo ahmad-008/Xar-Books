@@ -10,9 +10,9 @@ import { api } from "./api";
 
 // localStorage only exists in the browser; on the server use a no-op storage
 const createNoopStorage = () => ({
-    getItem: (_key: string) => Promise.resolve(null),
+    getItem: () => Promise.resolve(null),
     setItem: (_key: string, value: unknown) => Promise.resolve(value),
-    removeItem: (_key: string) => Promise.resolve(),
+    removeItem: () => Promise.resolve(),
 });
 
 const storage = typeof window !== "undefined" ? createWebStorage("local") : createNoopStorage();

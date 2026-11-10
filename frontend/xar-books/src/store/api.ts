@@ -58,6 +58,14 @@ export const api = createApi({
         resetPassword: builder.mutation<MessageResponse, { token: string; password: string }>({
             query: (body) => ({ url: "/auth/reset-password", method: "POST", body }),
         }),
+
+        verifyEmail: builder.mutation<AuthResponse, {token: string}> ({
+            query: (body) => ({url: "/auth/verify-email", method:"POST", body}),
+        }),
+
+        resendVerification:builder.mutation<MessageResponse, void>({
+            query: ()=> ({url: "/auth/resend-verification", method: "POST"}),
+        }),
     }),
 });
 
@@ -68,4 +76,7 @@ export const {
     useGetMeQuery,
     useForgotPasswordMutation,
     useResetPasswordMutation,
+    useVerifyEmailMutation,
+     useResendVerificationMutation,
 } = api;
+
