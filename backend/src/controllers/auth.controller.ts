@@ -18,6 +18,24 @@ const toPublicUser = (user: HydratedDocument<IUser>) => ({
     isEmailVerified: user.isEmailVerified,
 });
 
+const sendVerificationEmail = async (user: HydratedDocument<IUser>) => {
+    const verifyToken = crypto.randomBytes(32).toString("hex");
+
+    user.emailVerificationToken = crypto.createHash("sha256").update(verifyToken).digest("hex");
+    user.emailVerificationExpires= new Date(Date.now() + 24*60*60*1000);
+
+    await user.save();
+
+    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verifyToken}`;
+    await sendEmail(
+        user.email,
+        "Verify your Xar Books email",
+        `<p>Hi ${user.name.replace(/[<>&"]/g, "")},</p>
+         <p>Please confirm your email address.</p>
+         <p><a href="${verifyUrl}">Click here to verify your email</a></p>
+         <p>This link expires in 24 hours.</p>`
+    );
+}
 
 export const register = async (req: Request, res: Response) => {
     const { name, email, password, agreeTerms } = req.body ?? {};
@@ -35,14 +53,18 @@ export const register = async (req: Request, res: Response) => {
     }
 
     const user = await User.create({ name, email, password, agreeTerms });
+    try{
+        await sendVerificationEmail(user);
+    } catch (error) {
+        console.error("Verification email failed:", error);
+    }
 
     res.status(201).json({
         success: true,
-        message: "Account created",
+        message: "Account created. Please check your email to verify it",
         data: toPublicUser(user),
+    });
 
-
-    })
 
 };
 
@@ -175,4 +197,59 @@ export const resetPassword = async (req: Request, res: Response) => {
      });
 
 
+};
+
+export const verifyEmail = async (req: Request, res: Response) => {
+    const {token} = req.body ?? {};
+
+    if (typeof token !== "string"){
+        throw new AppError("Verification token is required", 400);
+    }
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await User.findOne({
+        emailVerificationToken: hashedToken,
+        emailVerificationExpires: {$gt: new Date()},
+    });
+
+    if (!user){
+        throw new AppError("This verification link is invalid or has expired",400);
+    }
+
+    user.isEmailVerified = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpires = undefined;
+    await user.save();
+
+    res.json({
+        success: true,
+        message: "Email verified",
+        data: toPublicUser(user),
+    });
+};
+
+export const resendVerification = async (req: Request, res: Response) => {
+    const user = await User.findById(req.userId);
+
+    if(!user){
+        throw new AppError("Please log in to continue", 401);
+    }
+
+    if ( user.isEmailVerified){
+        throw new AppError("Your email is already verified",401);
+    }
+
+    try {
+        await sendVerificationEmail(user);
+
+    } catch (error){
+        console.error("Verification email failed:",error);
+        throw new AppError("Could not send the verification email, please try again later", 500);
+    }
+
+    res.json({
+        success: true,
+        message: "Verification email sent",
+    });
 };
