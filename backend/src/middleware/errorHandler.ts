@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "../utils/AppError";
 import mongoose from "mongoose";
+import multer from "multer";
 
 // runs when no route matched the request
 export const notFound = (req: Request , _res: Response, next: NextFunction) => {
@@ -32,6 +33,16 @@ export const errorHandler = (
         const firstError = Object.values(err.errors)[0];
         res.status(400).json({ success: false, message: firstError?.message ?? "Invalid data" })
         return;
+    }
+
+    // an upload broke a limit, like a photo that's too big
+    if (err instanceof multer.MulterError) {
+        const message =
+        err.code === "LIMIT_FILE_SIZE" ? "Each image must be 1 MB or smaller":
+        err.code === "LIMIT_FILE_COUNT" || err.code === "LIMIT_UNEXPECTED_FILE" ? "You can upload up to 4 images":
+        err.message;
+        res.status(400).json({success: false, message});
+        return
     }
 
     // MongoDB rejected a duplicate value: email is our only unique field
