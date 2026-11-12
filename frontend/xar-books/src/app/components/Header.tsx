@@ -136,7 +136,7 @@ const Header = () => {
     },
     {
       icon: <PiggyBank className='h-5 w-5 ' />,
-      label: "My Selling Orders",
+      label: "My Listings",
       onclick: () => handleProtectionNavigation('/account/selling-products'),
     },
     {
