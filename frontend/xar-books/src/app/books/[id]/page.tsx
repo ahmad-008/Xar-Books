@@ -5,12 +5,17 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { Heart, ShoppingCart, User2 } from "lucide-react";
+import { Heart, LoaderCircle, ShoppingCart, User2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { howItWorks } from "@/lib/Constant";
-import { useGetProductQuery } from "@/store/api";
+import { useAddToCartMutation, useGetCartQuery, useGetProductQuery } from "@/store/api";
+import { useDispatch, useSelector } from "react-redux";
+import toast from "react-hot-toast";
+import { RootState } from "@/store/store";
+import { toggleLoginDialog } from "@/store/slice/userSlice";
+import { getErrorMessage } from "@/lib/getErrorMessage";
 import { BookLoader } from "@/lib/BookLoader";
 import NoData from "@/app/components/NoData";
 import ShareButton from "@/app/components/ShareButton";
@@ -29,6 +34,10 @@ const BookDetailsPage = () => {
 
     const {data, isLoading} = useGetProductQuery(id);
     const book = data?.data;
+    const dispatch = useDispatch();
+    const user = useSelector((state: RootState) => state.user.user);
+    const { data: cart } = useGetCartQuery(undefined, { skip: !user });
+    const [addToCart, { isLoading: isAdding }] = useAddToCartMutation();
     if(isLoading){
         return(
             <div className="flex min-h-[60vh] items-center justify-center" >
@@ -46,6 +55,23 @@ const BookDetailsPage = () => {
         );
     }
 
+
+    const sellerId = typeof book.seller === "object" ? book.seller._id : book.seller;
+    const isOwnBook = user?.id === sellerId;
+    const inCart = cart?.data.some((item) => item._id === book._id) ?? false;
+
+    const handleAddToCart = async () => {
+        if (!user) {
+            dispatch(toggleLoginDialog());
+            return;
+        }
+        try {
+            const result = await addToCart(book._id).unwrap();
+            toast.success(result.message ?? "Added to cart");
+        } catch (error) {
+            toast.error(getErrorMessage(error));
+        }
+    };
 
     const images = book.images.length > 0 ? book.images : ["/images/no-book.jpg"];
 
@@ -169,14 +195,28 @@ const BookDetailsPage = () => {
                             </p>
                         </div>
 
-                        <Button
-                            size='lg'
-                            disabled={book.isSold}
-                            className="w-full rounded-md bg-linear-to-r from-orange-500 to-orange-600 normal-case tracking-normal text-white hover:from-orange-600 hover:to-orange-700 "
-                        >
-                            <ShoppingCart className="mr-2 h-5 w-5" />
-                            {book.isSold ? "Sold out" : "Buy Now"}
-                        </Button>
+                        {inCart ? (
+                            <Button asChild size='lg' variant="outline" className="w-full rounded-md normal-case tracking-normal">
+                                <Link href="/checkout/cart">
+                                    <ShoppingCart className="mr-2 h-5 w-5" />
+                                    In your cart · Go to cart
+                                </Link>
+                            </Button>
+                        ) : (
+                            <Button
+                                size='lg'
+                                onClick={handleAddToCart}
+                                disabled={book.isSold || isOwnBook || isAdding}
+                                className="w-full rounded-md bg-linear-to-r from-orange-500 to-orange-600 normal-case tracking-normal text-white hover:from-orange-600 hover:to-orange-700 "
+                            >
+                                {isAdding ? (
+                                    <LoaderCircle className="mr-2 h-5 w-5 animate-spin" />
+                                ) : (
+                                    <ShoppingCart className="mr-2 h-5 w-5" />
+                                )}
+                                {book.isSold ? "Sold out" : isOwnBook ? "This is your listing" : "Add to cart"}
+                            </Button>
+                        )}
 
 
                         {/* Book details */}
