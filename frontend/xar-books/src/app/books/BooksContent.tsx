@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { books, filters } from "@/lib/Constant";
+import { filters } from "@/lib/Constant";
+import { ProductFilters, useGetProductsQuery } from "@/store/api";
+import { BookLoader } from "@/lib/BookLoader";
 import Link from "next/link";
 import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
@@ -29,7 +31,7 @@ const filterGroups: { key: FilterKey; label: string }[] = [
 const BooksContent = () => {
     const searchParams = useSearchParams();
     const searchTerm = (searchParams.get("search") || "").trim().toLowerCase();
-    const searchWords = searchTerm.split(/\s+/).filter(Boolean);
+    
 
     const [currentPage, setCurrentPage] = useState(1);
     const [sortOption, setSortOption] = useState("newest");
@@ -56,44 +58,17 @@ const BooksContent = () => {
         setCurrentPage(1);
     }
 
-
-    const filteredBooks = books.filter((book) => {
-        const matchesFilter = (key: FilterKey) =>
-            selectedFilters[key].length === 0 || selectedFilters[key].includes(book[key]);
-
-
-        // every word typed must appear somewhere in the book's text, in any order
-        const searchableText = [book.title, book.author, book.category, book.subject]
-            .join(" ")
-            .toLowerCase();
-        const matchesSearch = searchWords.every((word) => searchableText.includes(word));
-
-        return matchesFilter("condition") && matchesFilter("classType") && matchesFilter("category") && matchesSearch;
-
+    const { data, isLoading, isFetching, isError } = useGetProductsQuery({
+        search: searchTerm || undefined,
+        ...selectedFilters,
+        sort: sortOption as ProductFilters["sort"],
+        page: currentPage,
+        limit: BOOKS_PER_PAGE,
     });
 
-
-    const sortedBooks = [...filteredBooks].sort((a, b) => {
-        switch (sortOption) {
-            case "oldest":
-                return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-            case "price-low":
-                return a.finalPrice - b.finalPrice;
-            case "price-high":
-                return b.finalPrice - a.finalPrice;
-            default:
-                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-
-
-        }
-    });
-
-    const totalPages = Math.ceil(sortedBooks.length / BOOKS_PER_PAGE);
-    const paginatedBooks = sortedBooks.slice(
-        (currentPage - 1) * BOOKS_PER_PAGE,
-        currentPage * BOOKS_PER_PAGE
-
-    );
+    const products = data?.data ?? [];
+    const total = data?.pagination?.total ?? 0;
+    const totalPages = data?.pagination?.pages ?? 0;
 
     const calculateDiscount = (price: number, finalPrice: number) =>
         price > finalPrice && price > 0 ? Math.round(((price - finalPrice) / price) * 100) : 0;
@@ -143,7 +118,7 @@ const BooksContent = () => {
                         <div className="mb-6 flex items-center justify-between" >
                             <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground" >
                                 <span>
-                                    {sortedBooks.length} {sortedBooks.length === 1 ? "book" : "books"} found
+                                    {total} {total === 1 ? "book" : "books"} found
                                     {searchTerm && (
                                         <> for <span className="font-semibold text-gray-900">&quot;{searchTerm}&quot;</span></>
                                     )}
@@ -161,18 +136,29 @@ const BooksContent = () => {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="newest">Newest First</SelectItem>
-                                    <SelectItem value="oldest">Oldest First</SelectItem>
-                                    <SelectItem value="price-low">Price: Low to High</SelectItem>
-                                    <SelectItem value="price-high">Price: High to Low</SelectItem>
+                                    <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                                    <SelectItem value="price-desc">Price: High to Low</SelectItem>
+
                                 </SelectContent>
 
                             </Select>
                         </div>
 
-                        {paginatedBooks.length > 0 ? (
+
+                        {isLoading ? (
+                            <div className="flex justify-center py-16" >
+                                <BookLoader />
+
+                            </div>
+                        ) : isError ? (
+                            <NoData message="Couldn't load books" description="Please check your connection and try again." />
+                        ) : products.length > 0 ? (
+
+
                             <>
-                                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" >
-                                    {paginatedBooks.map((book, index) => {
+                                <div className={`grid gap-6 sm:grid-cols-2 lg:grid-cols-3 ${isFetching ? "opacity-60" : ""}`}>
+
+                                    {products.map((book, index) => {
                                         const discount = calculateDiscount(book.price, book.finalPrice);
                                         return (
                                             <motion.div
