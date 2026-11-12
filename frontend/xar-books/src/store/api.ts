@@ -24,12 +24,54 @@ interface MessageResponse {
     message: string;
 }
 
+export interface Product {
+    _id: string;
+    title: string;
+    images: string[];
+    subject: string;
+    category: string;
+    condition: "Excellent" | "Good" | "Fair";
+    classType: string;
+    price: number;
+    finalPrice: number;
+    shippingCharge: number;
+    author?: string;
+    edition?: string;
+    description?: string;
+    seller: string | { _id: string; name: string };
+    isSold: boolean;
+    createdAt: string;
+}
+
+export interface ProductFilters {
+    search?: string;
+    category?: string[];
+    condition?: string[];
+    classType?: string[];
+    sort?: "newest" | "price-asc" | "price-desc";
+    page?: number;
+    limit?: number;
+}
+
+interface ProductListResponse {
+    success: boolean;
+    data: Product[];
+    pagination?: { page: number; limit: number; total: number; pages: number };
+}
+
+interface ProductResponse {
+    success: boolean;
+    message?: string;
+    data: Product;
+}
+
+
 export const api = createApi({
     baseQuery: fetchBaseQuery({
         baseUrl: BASE_URL,
         credentials: "include",
     }),
-    tagTypes: ["User"],
+    tagTypes: ["User", "Product"],
     endpoints: (builder) => ({
 
         register: builder.mutation<AuthResponse, { name: string; email: string; password: string; agreeTerms: boolean }>({
@@ -59,13 +101,50 @@ export const api = createApi({
             query: (body) => ({ url: "/auth/reset-password", method: "POST", body }),
         }),
 
-        verifyEmail: builder.mutation<AuthResponse, {token: string}> ({
-            query: (body) => ({url: "/auth/verify-email", method:"POST", body}),
+        verifyEmail: builder.mutation<AuthResponse, { token: string }>({
+            query: (body) => ({ url: "/auth/verify-email", method: "POST", body }),
         }),
 
-        resendVerification:builder.mutation<MessageResponse, void>({
-            query: ()=> ({url: "/auth/resend-verification", method: "POST"}),
+        resendVerification: builder.mutation<MessageResponse, void>({
+            query: () => ({ url: "/auth/resend-verification", method: "POST" }),
         }),
+
+        getProducts: builder.query<ProductListResponse, ProductFilters>({
+            query: (filters) => {
+                const params = new URLSearchParams();
+                if (filters.search) params.set("search", filters.search);
+                filters.category?.forEach((value) => params.append("category", value));
+                filters.condition?.forEach((value) => params.append("condition", value));
+                filters.classType?.forEach((value) => params.append("classType", value));
+                if (filters.sort) params.set("sort", filters.sort);
+                if (filters.page) params.set("page", String(filters.page));
+                if (filters.limit) params.set("limit", String(filters.limit));
+                return `/products?${params.toString()}`;
+
+            },
+            providesTags: ["Product"],
+        }),
+
+        getProduct: builder.query<ProductResponse, string>({
+            query: (id) => `/products/${id}`,
+            providesTags: ["Product"],
+        }),
+
+        getMyProducts: builder.query<ProductListResponse, void>({
+            query: () => "/products/mine",
+            providesTags: ["Product"],
+        }),
+
+        createProduct: builder.mutation<ProductResponse, FormData>({
+            query: (body) => ({ url: "/products", method: "POST", body }),
+            invalidatesTags: ["Product"],
+        }),
+
+        deleteProduct: builder.mutation<MessageResponse, string>({
+            query: (id) => ({ url: `/products/${id}`, method: "DELETE" }),
+            invalidatesTags: ["Product"],
+        }),
+
     }),
 });
 
@@ -77,6 +156,11 @@ export const {
     useForgotPasswordMutation,
     useResetPasswordMutation,
     useVerifyEmailMutation,
-     useResendVerificationMutation,
+    useResendVerificationMutation,
+    useGetProductsQuery,
+    useGetProductQuery,
+    useGetMyProductsQuery,
+    useCreateProductMutation,
+    useDeleteProductMutation,
 } = api;
 
