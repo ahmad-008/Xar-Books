@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
-import ComingSoon from "@/app/components/ComingSoon";
+import MyListings from "@/app/components/MyListings";
 
 export const metadata: Metadata = {
-  title: "My Selling Orders | Xar Books",
+  title: "My Listings | Xar Books",
 };
 
 export default function SellingProductsPage() {
   return (
-    <ComingSoon
-      title="My Selling Orders"
-      description="Soon you'll be able to manage the books you've listed for sale here."
-    />
+    <div className="mx-auto max-w-3xl px-4 py-10">
+      <MyListings />
+    </div>
   );
 }
