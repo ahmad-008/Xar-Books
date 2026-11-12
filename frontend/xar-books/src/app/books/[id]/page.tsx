@@ -9,9 +9,13 @@ import { Heart, ShoppingCart, User2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { books, howItWorks } from "@/lib/Constant";
+import { howItWorks } from "@/lib/Constant";
+import { useGetProductQuery } from "@/store/api";
+import { BookLoader } from "@/lib/BookLoader";
 import NoData from "@/app/components/NoData";
 import ShareButton from "@/app/components/ShareButton";
+
+
 
 
 
@@ -23,7 +27,15 @@ const BookDetailsPage = () => {
     const [isWishlisted, setIsWishlisted] = useState(false);
 
 
-    const book = books.find((b) => b._id === id);
+    const {data, isLoading} = useGetProductQuery(id);
+    const book = data?.data;
+    if(isLoading){
+        return(
+            <div className="flex min-h-[60vh] items-center justify-center" >
+                <BookLoader/>
+            </div>
+        );
+    }
 
     if (!book) {
         return (
@@ -50,7 +62,7 @@ const BookDetailsPage = () => {
         { label: "Class", value: book.classType },
         { label: "Condition", value: book.condition },
         { label: "Edition", value: book.edition },
-    ];
+    ].filter((item)=> item.value);
 
     return (
         <div className="min-h-screen bg-gray-50" >
@@ -159,11 +171,13 @@ const BookDetailsPage = () => {
 
                         <Button
                             size='lg'
+                            disabled={book.isSold}
                             className="w-full rounded-md bg-linear-to-r from-orange-500 to-orange-600 normal-case tracking-normal text-white hover:from-orange-600 hover:to-orange-700 "
                         >
                             <ShoppingCart className="mr-2 h-5 w-5" />
-                            Buy Now
+                            {book.isSold ? "Sold out" : "Buy Now"}
                         </Button>
+
 
                         {/* Book details */}
                         <Card className="gap-0 rounded-xl py-0 shadow-md" >
@@ -193,7 +207,7 @@ const BookDetailsPage = () => {
                     <Card className="gap-0 rounded-xl py-0 shadow-md" >
                         <CardContent className="p-6" >
                             <h2 className="mb-4 text-lg font-semibold">Description</h2>
-                            <p className="text-gray-600">{book.description}</p>
+                            <p className="whitespace-pre-line text-gray-600">{book.description || "No description provided."}</p>
                         </CardContent>
                     </Card>
 
@@ -205,7 +219,7 @@ const BookDetailsPage = () => {
                                     <User2 className="h-6 w-6 text-orange-600" />
                                 </div>
                                 <div>
-                                    <p className="font-medium">{book.seller.name}</p>
+                                    <p className="font-medium">{typeof book.seller === "object" ? book.seller.name : "Seller"}</p>
                                     <Badge variant="secondary" className="mt-1">Verified Seller</Badge>
                                 </div>
                             </div>
@@ -242,7 +256,7 @@ const BookDetailsPage = () => {
 
 
 
-        
+
 
     );
 };
