@@ -6,6 +6,7 @@ import connectDB from "./config/db";
 import { errorHandler, notFound } from "./middleware/errorHandler";
 import authRoutes from "./routes/auth.routes";
 import productRoutes from "./routes/product.routes";
+import cartRoutes from "./routes/cart.routes";
 
 
 const app = express();
@@ -38,6 +39,7 @@ app.get("/api/health", (_req: Request, res: Response) => {
 //Signup route
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/cart", cartRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
