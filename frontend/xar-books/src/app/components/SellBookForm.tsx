@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { filters } from "@/lib/Constant";
 import { LoaderCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 
 
@@ -49,7 +50,7 @@ export default function SellBookForm() {
     const [images, setImages] = useState<PickedImage[]>([]);
     const [imageError, setImageError] = useState("");
     const [createProduct, { isLoading }] = useCreateProductMutation();
-
+    const router = useRouter();
 
 
     const {
@@ -106,6 +107,7 @@ export default function SellBookForm() {
             toast.success(result.message ?? "Book listed for sale");
             reset(emptyForm);
             setImages([]);
+            router.push("/account/selling-products");
         } catch (error) {
             toast.error(getErrorMessage(error));
         }
