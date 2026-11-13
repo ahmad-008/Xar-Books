@@ -15,7 +15,7 @@ import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import AuthPage from './AuthPage';
 import toast from 'react-hot-toast';
-import { useLogoutMutation } from '@/store/api';
+import { api, useGetCartQuery, useLogoutMutation } from '@/store/api';
 
 
 
@@ -79,11 +79,14 @@ const Header = () => {
   }
 
   const [logoutUser] = useLogoutMutation()
+  const {data: cart} = useGetCartQuery(undefined,{skip: !user})
+  const cartCount = cart?.data.length ?? 0
 
   const handleLogout = async () => {
       try{
         await logoutUser().unwrap()
         dispatch(logout())
+        dispatch(api.util.resetApiState())
         toast.success("Logged out")
         router.push('/')
 
@@ -298,8 +301,8 @@ const Header = () => {
                 <ShoppingCart className='h-5 w-5 mr-2' />
                 Cart
               </Button>
-              {user && (
-                <span className='absolute top-2 left-7 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full px-1 text-xs' >3</span>
+              {cartCount > 0 && (
+                <span className='absolute top-2 left-7 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full px-1 text-xs' >{cartCount}</span>
               )}
             </div>
           </Link>
@@ -390,8 +393,8 @@ const Header = () => {
             <Button variant='ghost' className='relative normal-case tracking-normal'>
               <ShoppingCart className='h-5 w-5 mr-2' />
             </Button>
-            {user && (
-              <span className='absolute top-2 left-7 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full px-1 text-xs' >3</span>
+            {cartCount > 0 && (
+              <span className='absolute top-2 left-7 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full px-1 text-xs' >{cartCount}</span>
             )}
           </div>
         </Link>

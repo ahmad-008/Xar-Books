@@ -59,7 +59,7 @@ export const removeFromCart = async (req: Request, res: Response) =>{
 
     await Cart.updateOne({user: req.userId}, {$pull: {items: productId}});
 
-    await sendCart(req.userId, res, "Remove from cart");
+    await sendCart(req.userId, res, "Removed from cart");
 };
 
 

@@ -59,6 +59,24 @@ interface ProductListResponse {
     pagination?: { page: number; limit: number; total: number; pages: number };
 }
 
+export interface CartItem {
+    _id: string;
+    title: string;
+    images: string[];
+    price: number;
+    finalPrice: number;
+    shippingCharge: number;
+    condition: Product["condition"];
+    isSold: boolean;
+    seller: { _id: string; name: string };
+}
+
+interface CartResponse {
+    success: boolean;
+    message?: string;
+    data: CartItem[];
+}
+
 interface ProductResponse {
     success: boolean;
     message?: string;
@@ -71,7 +89,7 @@ export const api = createApi({
         baseUrl: BASE_URL,
         credentials: "include",
     }),
-    tagTypes: ["User", "Product"],
+    tagTypes: ["User", "Product", "Cart"],
     endpoints: (builder) => ({
 
         register: builder.mutation<AuthResponse, { name: string; email: string; password: string; agreeTerms: boolean }>({
@@ -145,6 +163,26 @@ export const api = createApi({
             invalidatesTags: ["Product"],
         }),
 
+        getCart: builder.query<CartResponse, void>({
+            query: () => "/cart",
+            providesTags: ["Cart"],
+        }),
+
+        addToCart: builder.mutation<CartResponse, string>({
+            query: (productId) => ({ url: "/cart", method: "POST", body: { productId } }),
+            invalidatesTags: ["Cart"],
+        }),
+
+        removeFromCart: builder.mutation<CartResponse, string>({
+            query: (productId) => ({ url: `/cart/${productId}`, method: "DELETE" }),
+            invalidatesTags: ["Cart"],
+        }),
+
+        clearCart: builder.mutation<CartResponse, void>({
+            query: () => ({url: "/cart", method: "DELETE"}),
+            invalidatesTags: ["Cart"],
+        }),
+
     }),
 });
 
@@ -162,5 +200,9 @@ export const {
     useGetMyProductsQuery,
     useCreateProductMutation,
     useDeleteProductMutation,
+    useGetCartQuery,
+    useAddToCartMutation,
+    useRemoveFromCartMutation,
+    useClearCartMutation,
 } = api;
 
