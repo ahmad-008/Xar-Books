@@ -89,7 +89,7 @@ export const api = createApi({
         baseUrl: BASE_URL,
         credentials: "include",
     }),
-    tagTypes: ["User", "Product", "Cart"],
+    tagTypes: ["User", "Product", "Cart", "Wishlist"],
     endpoints: (builder) => ({
 
         register: builder.mutation<AuthResponse, { name: string; email: string; password: string; agreeTerms: boolean }>({
@@ -179,9 +179,26 @@ export const api = createApi({
         }),
 
         clearCart: builder.mutation<CartResponse, void>({
-            query: () => ({url: "/cart", method: "DELETE"}),
+            query: () => ({ url: "/cart", method: "DELETE" }),
             invalidatesTags: ["Cart"],
         }),
+
+        getWishlist: builder.query<CartResponse, void>({
+            query: () => "/wishlist",
+            providesTags: ["Wishlist"],
+        }),
+
+        addToWishlist: builder.mutation<CartResponse, string>({
+            query: (productId) => ({ url: "/wishlist", method: "POST", body: { productId } }),
+            invalidatesTags: ["Wishlist"],
+        }),
+
+        removeFromWishlist: builder.mutation<CartResponse, string>({
+            query: (productId) => ({ url: `/wishlist/${productId}`, method: "DELETE" }),
+            invalidatesTags: ["Wishlist"],
+        }),
+
+
 
     }),
 });
@@ -204,5 +221,8 @@ export const {
     useAddToCartMutation,
     useRemoveFromCartMutation,
     useClearCartMutation,
+    useGetWishlistQuery,
+    useAddToWishlistMutation,
+    useRemoveFromWishlistMutation,
 } = api;
 
