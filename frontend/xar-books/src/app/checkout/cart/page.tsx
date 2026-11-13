@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import ComingSoon from "@/app/components/ComingSoon";
+import CartContent from "@/app/components/CartContent";
 
 export const metadata: Metadata = {
   title: "Your Cart | Xar Books",
@@ -7,9 +7,8 @@ export const metadata: Metadata = {
 
 export default function CartPage() {
   return (
-    <ComingSoon
-      title="Your Cart"
-      description="Shopping cart and secure Stripe checkout are coming soon."
-    />
+    <div className="mx-auto max-w-5xl px-4 py-10">
+      <CartContent />
+    </div>
   );
 }
