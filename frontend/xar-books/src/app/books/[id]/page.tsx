@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { howItWorks } from "@/lib/Constant";
-import { useAddToCartMutation, useGetCartQuery, useGetProductQuery } from "@/store/api";
+import { useAddToCartMutation, useAddToWishlistMutation, useGetCartQuery, useGetProductQuery, useGetWishlistQuery, useRemoveFromWishlistMutation } from "@/store/api";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { RootState } from "@/store/store";
@@ -29,19 +29,25 @@ const BookDetailsPage = () => {
 
     const { id } = useParams<{ id: string }>();
     const [selectedImage, setSelectedImage] = useState(0);
-    const [isWishlisted, setIsWishlisted] = useState(false);
+    
 
 
-    const {data, isLoading} = useGetProductQuery(id);
+    const { data, isLoading } = useGetProductQuery(id);
     const book = data?.data;
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user.user);
     const { data: cart } = useGetCartQuery(undefined, { skip: !user });
     const [addToCart, { isLoading: isAdding }] = useAddToCartMutation();
-    if(isLoading){
-        return(
+    const {data: wishlist} = useGetWishlistQuery(undefined, {skip: !user});
+    const [addToWishlist, {isLoading: isAddingWish}] = useAddToWishlistMutation();
+    const [removeFromWishlist, { isLoading: isRemovingWish }] = useRemoveFromWishlistMutation();
+    const isSavingWishlist = isAddingWish || isRemovingWish;
+
+
+    if (isLoading) {
+        return (
             <div className="flex min-h-[60vh] items-center justify-center" >
-                <BookLoader/>
+                <BookLoader />
             </div>
         );
     }
@@ -73,6 +79,23 @@ const BookDetailsPage = () => {
         }
     };
 
+    const isWishlisted = wishlist?.data.some((item) => item._id === book._id) ?? false;
+
+    const handleToggleWishlist = async () => {
+        if (!user) {
+            dispatch(toggleLoginDialog());
+            return;
+        }
+        try {
+            const result = isWishlisted
+                ? await removeFromWishlist(book._id).unwrap()
+                : await addToWishlist(book._id).unwrap();
+            toast.success(result.message ?? "Wishlist updated");
+        } catch (error) {
+            toast.error(getErrorMessage(error));
+        }
+    };
+
     const images = book.images.length > 0 ? book.images : ["/images/no-book.jpg"];
 
 
@@ -88,7 +111,7 @@ const BookDetailsPage = () => {
         { label: "Class", value: book.classType },
         { label: "Condition", value: book.condition },
         { label: "Edition", value: book.edition },
-    ].filter((item)=> item.value);
+    ].filter((item) => item.value);
 
     return (
         <div className="min-h-screen bg-gray-50" >
@@ -171,8 +194,10 @@ const BookDetailsPage = () => {
                                 <Button
                                     variant='outline'
                                     size='icon'
-                                    onClick={() => setIsWishlisted(!isWishlisted)}
-                                    aria-label="Add to wishlist"
+                                    onClick={handleToggleWishlist}
+                                    disabled={isOwnBook || isSavingWishlist || (book.isSold && !isWishlisted)}
+                                    aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                                    aria-pressed={isWishlisted}
                                 >
                                     <Heart className={`h-5 w-5 ${isWishlisted ? "fill-red-500 text-red-500 " : ""}`} />
                                 </Button>

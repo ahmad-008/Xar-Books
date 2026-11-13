@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import ComingSoon from "@/app/components/ComingSoon";
+import WishlistContent from "@/app/components/WishlistContent";
 
 export const metadata: Metadata = {
   title: "My Wishlist | Xar Books",
@@ -7,9 +7,8 @@ export const metadata: Metadata = {
 
 export default function WishlistPage() {
   return (
-    <ComingSoon
-      title="My Wishlist"
-      description="Soon you'll be able to save your favourite books here."
-    />
+    <div className="mx-auto max-w-3xl px-4 py-10">
+      <WishlistContent />
+    </div>
   );
 }
