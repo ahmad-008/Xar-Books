@@ -77,6 +77,50 @@ interface CartResponse {
     data: CartItem[];
 }
 
+export interface ShippingAddress {
+    fullName: string;
+    phone: string;
+    addressLine1: string;
+    addressLine2?: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+}
+
+export interface OrderItem {
+    product: string;
+    seller: string;
+    title: string;
+    image: string;
+    price: number;
+    shippingCharge: number;
+}
+
+export interface Order {
+    _id: string;
+    items: OrderItem[];
+    shippingAddress: ShippingAddress;
+    itemsTotal: number;
+    shippingTotal: number;
+    totalAmount: number;
+    paymentMethod: "COD" | "Card";
+    paymentStatus: "pending" | "paid" | "failed";
+    orderStatus: "processing" | "shipped" | "delivered" | "cancelled";
+    createdAt: string;
+}
+
+interface OrderResponse {
+    success: boolean;
+    message?: string;
+    data: Order;
+}
+
+interface OrderListResponse {
+    success: boolean;
+    data: Order[];
+}
+
 interface ProductResponse {
     success: boolean;
     message?: string;
@@ -89,7 +133,7 @@ export const api = createApi({
         baseUrl: BASE_URL,
         credentials: "include",
     }),
-    tagTypes: ["User", "Product", "Cart", "Wishlist"],
+    tagTypes: ["User", "Product", "Cart", "Wishlist", "Order"],
     endpoints: (builder) => ({
 
         register: builder.mutation<AuthResponse, { name: string; email: string; password: string; agreeTerms: boolean }>({
@@ -198,6 +242,21 @@ export const api = createApi({
             invalidatesTags: ["Wishlist"],
         }),
 
+        createOrder: builder.mutation<OrderResponse, { paymentMethod: "COD"; shippingAddress: ShippingAddress }>({
+            query: (body) => ({ url: "/orders", method: "POST", body }),
+            invalidatesTags: ["Cart", "Product", "Order"],
+        }),
+
+        getMyOrders: builder.query<OrderListResponse, void>({
+            query: () => "/orders",
+            providesTags: ["Order"],
+        }),
+
+        getOrder: builder.query<OrderResponse, string>({
+            query: (id) => `/orders/${id}`,
+            providesTags: ["Order"],
+        }),
+
 
 
     }),
@@ -224,5 +283,8 @@ export const {
     useGetWishlistQuery,
     useAddToWishlistMutation,
     useRemoveFromWishlistMutation,
+    useCreateOrderMutation,
+    useGetMyOrdersQuery,
+    useGetOrderQuery,
 } = api;
 

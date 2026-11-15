@@ -66,14 +66,14 @@ export default function CartContent() {
         );
     }
 
-    const available = items.filter((item)=> !item.isSold);
-    const subtotal = available.reduce((sum, item)=> sum + item.finalPrice, 0);
-    const shipping = available.reduce((sum, item)=> sum + item.shippingCharge,0);
+    const available = items.filter((item) => !item.isSold);
+    const subtotal = available.reduce((sum, item) => sum + item.finalPrice, 0);
+    const shipping = available.reduce((sum, item) => sum + item.shippingCharge, 0);
     const total = subtotal + shipping;
 
     const handleClear = async () => {
-        if(!window.confirm("Remove all books from your cart?")) return;
-        try{
+        if (!window.confirm("Remove all books from your cart?")) return;
+        try {
             const result = await clearCart().unwrap();
             toast.success(result.message ?? "Cart cleared");
         } catch (error) {
@@ -176,9 +176,17 @@ export default function CartContent() {
                         {available.length < items.length && (
                             <p className="text-xs text-muted-foreground">Sold-out books aren&apos;t included. Remove them to tidy up your cart.</p>
                         )}
-                        <Button disabled className="w-full rounded-md normal-case tracking-normal">
-                            Checkout (coming soon)
-                        </Button>
+
+                        {available.length > 0 ? (
+                            <Button asChild className="w-full rounded-md normal-case tracking-normal">
+                                <Link href="/checkout">Checkout</Link>
+                            </Button>
+                        ) : (
+                            <Button disabled className="w-full rounded-md normal-case tracking-normal">
+                                No books available to order
+                            </Button>
+                        )}
+
                     </CardContent>
                 </Card>
 
