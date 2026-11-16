@@ -1,0 +1,216 @@
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import { HydratedDocument } from "mongoose";
+import { NextRequest, NextResponse } from "next/server";
+import { IUser, User } from "../models/User";
+import { AppError } from "../utils/AppError";
+import { clearAuthCookie, requireUserId, setAuthCookie } from "../utils/auth";
+import { appUrl, readJson } from "../utils/http";
+import { sendEmail } from "../utils/sendEmail";
+
+const toPublicUser = (user: HydratedDocument<IUser>) => ({
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    isEmailVerified: user.isEmailVerified,
+});
+
+const hashToken = (token: string) => crypto.createHash("sha256").update(token).digest("hex");
+
+const sendVerificationEmail = async (user: HydratedDocument<IUser>, baseUrl: string) => {
+    const verifyToken = crypto.randomBytes(32).toString("hex");
+
+    user.emailVerificationToken = hashToken(verifyToken);
+    user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await user.save();
+
+    const verifyUrl = `${baseUrl}/verify-email?token=${verifyToken}`;
+    await sendEmail(
+        user.email,
+        "Verify your Xar Books email",
+        `<p>Hi ${user.name.replace(/[<>&"]/g, "")},</p>
+         <p>Please confirm your email address.</p>
+         <p><a href="${verifyUrl}">Click here to verify your email</a></p>
+         <p>This link expires in 24 hours.</p>`
+    );
+};
+
+export const register = async (req: NextRequest) => {
+    const { name, email, password, agreeTerms } = await readJson(req);
+
+    if (typeof name !== "string" || typeof email !== "string" || typeof password !== "string") {
+        throw new AppError("Name, email and password are required", 400);
+    }
+
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+        throw new AppError("Enter a valid email", 400);
+    }
+
+    if (agreeTerms !== true) {
+        throw new AppError("You must accept the terms", 400);
+    }
+
+    const user = await User.create({ name, email, password, agreeTerms });
+    try {
+        await sendVerificationEmail(user, appUrl(req));
+    } catch (error) {
+        console.error("Verification email failed:", error);
+    }
+
+    return NextResponse.json(
+        {
+            success: true,
+            message: "Account created. Please check your email to verify it",
+            data: toPublicUser(user),
+        },
+        { status: 201 }
+    );
+};
+
+export const login = async (req: NextRequest) => {
+    const { email, password } = await readJson(req);
+
+    if (typeof email !== "string" || typeof password !== "string") {
+        throw new AppError("Email and password are required", 400);
+    }
+
+    const user = await User.findOne({ email: email.trim().toLowerCase() }).select("+password");
+    const isPasswordCorrect = user ? await bcrypt.compare(password, user.password) : false;
+
+    if (!user || !isPasswordCorrect) {
+        throw new AppError("Invalid email or password", 401);
+    }
+
+    const res = NextResponse.json({ success: true, message: "Logged In", data: toPublicUser(user) });
+    setAuthCookie(res, user._id.toString());
+    return res;
+};
+
+export const logout = async () => {
+    const res = NextResponse.json({ success: true, message: "Logged out" });
+    clearAuthCookie(res);
+    return res;
+};
+
+export const getMe = async (req: NextRequest) => {
+    const user = await User.findById(requireUserId(req));
+
+    if (!user) {
+        throw new AppError("Please log in to continue", 401);
+    }
+
+    return NextResponse.json({ success: true, data: toPublicUser(user) });
+};
+
+export const forgotPassword = async (req: NextRequest) => {
+    const { email } = await readJson(req);
+
+    if (typeof email !== "string") {
+        throw new AppError("Email is required", 400);
+    }
+
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
+
+    if (user) {
+        const resetToken = crypto.randomBytes(32).toString("hex");
+
+        user.passwordResetToken = hashToken(resetToken);
+        user.passwordResetExpires = new Date(Date.now() + 15 * 60 * 1000);
+        await user.save();
+
+        const resetUrl = `${appUrl(req)}/reset-password?token=${resetToken}`;
+
+        try {
+            await sendEmail(
+                user.email,
+                "Reset your Xar Books password",
+                `<p>You asked to reset your password.</p>
+                 <p><a href="${resetUrl}">Click here to choose a new password</a></p>
+                 <p>This link expires in 15 minutes. If you didn't ask for this, ignore this email.</p>`
+            );
+        } catch (error) {
+            user.passwordResetToken = undefined;
+            user.passwordResetExpires = undefined;
+            await user.save();
+            console.error("Reset email failed:", error);
+            throw new AppError("Could not send the reset email, please try again later", 500);
+        }
+    }
+
+    return NextResponse.json({
+        success: true,
+        message: "If an account exists for that email, a reset link has been sent",
+    });
+};
+
+export const resetPassword = async (req: NextRequest) => {
+    const { token, password } = await readJson(req);
+
+    if (typeof token !== "string" || typeof password !== "string") {
+        throw new AppError("Token and new password are required", 400);
+    }
+
+    const user = await User.findOne({
+        passwordResetToken: hashToken(token),
+        passwordResetExpires: { $gt: new Date() },
+    });
+
+    if (!user) {
+        throw new AppError("This reset link is invalid or has expired", 400);
+    }
+
+    user.password = password;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
+
+    const res = NextResponse.json({ success: true, message: "Password updated, please log in" });
+    clearAuthCookie(res);
+    return res;
+};
+
+export const verifyEmail = async (req: NextRequest) => {
+    const { token } = await readJson(req);
+
+    if (typeof token !== "string") {
+        throw new AppError("Verification token is required", 400);
+    }
+
+    const user = await User.findOne({
+        emailVerificationToken: hashToken(token),
+        emailVerificationExpires: { $gt: new Date() },
+    });
+
+    if (!user) {
+        throw new AppError("This verification link is invalid or has expired", 400);
+    }
+
+    user.isEmailVerified = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpires = undefined;
+    await user.save();
+
+    return NextResponse.json({ success: true, message: "Email verified", data: toPublicUser(user) });
+};
+
+export const resendVerification = async (req: NextRequest) => {
+    const user = await User.findById(requireUserId(req));
+
+    if (!user) {
+        throw new AppError("Please log in to continue", 401);
+    }
+
+    if (user.isEmailVerified) {
+        throw new AppError("Your email is already verified", 400);
+    }
+
+    try {
+        await sendVerificationEmail(user, appUrl(req));
+    } catch (error) {
+        console.error("Verification email failed:", error);
+        throw new AppError("Could not send the verification email, please try again later", 500);
+    }
+
+    return NextResponse.json({ success: true, message: "Verification email sent" });
+};
