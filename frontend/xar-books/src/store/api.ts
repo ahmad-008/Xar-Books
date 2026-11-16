@@ -97,6 +97,7 @@ export interface OrderItem {
     shippingCharge: number;
 }
 
+export type PaymentMethod = "COD" | "Card";
 export interface Order {
     _id: string;
     items: OrderItem[];
@@ -114,6 +115,7 @@ interface OrderResponse {
     success: boolean;
     message?: string;
     data: Order;
+    checkoutUrl?: string;
 }
 
 interface OrderListResponse {
@@ -242,7 +244,7 @@ export const api = createApi({
             invalidatesTags: ["Wishlist"],
         }),
 
-        createOrder: builder.mutation<OrderResponse, { paymentMethod: "COD"; shippingAddress: ShippingAddress }>({
+        createOrder: builder.mutation<OrderResponse, { paymentMethod: PaymentMethod; shippingAddress: ShippingAddress }>({
             query: (body) => ({ url: "/orders", method: "POST", body }),
             invalidatesTags: ["Cart", "Product", "Order"],
         }),
