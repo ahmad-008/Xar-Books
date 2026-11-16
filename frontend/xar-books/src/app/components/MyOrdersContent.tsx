@@ -21,7 +21,7 @@ const STATUS_STYLES: Record<Order["orderStatus"], string> = {
 export default function MyOrdersContent() {
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user.user);
-    const { data, isLoading, isError } = useGetMyOrdersQuery(undefined, { skip: !user });
+    const { data, isLoading, isError } = useGetMyOrdersQuery(undefined, { skip: !user, refetchOnMountOrArgChange: true, });
 
     if (!user) {
         return (

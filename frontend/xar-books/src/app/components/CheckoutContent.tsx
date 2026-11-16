@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BookLoader } from "@/lib/BookLoader";
 import { getErrorMessage } from "@/lib/getErrorMessage";
-import { ShippingAddress, useCreateOrderMutation, useGetCartQuery } from "@/store/api";
+import { ShippingAddress, useCreateOrderMutation, useGetCartQuery, PaymentMethod } from "@/store/api";
 import { RootState } from "@/store/store";
 import { toggleLoginDialog } from "@/store/slice/userSlice";
 import NoData from "./NoData";
@@ -26,6 +26,11 @@ const FIELDS: { name: keyof ShippingAddress; label: string; optional?: boolean; 
     { name: "state", label: "State / Province", maxLength: 100 },
     { name: "postalCode", label: "Postal code", maxLength: 20 },
     { name: "country", label: "Country", maxLength: 100 },
+];
+
+const PAYMENT_OPTIONS: { value: PaymentMethod; label: string; description: string }[] = [
+    { value: "COD", label: "Cash on delivery", description: "pay when your books arrive." },
+    { value: "Card", label: "Card", description: "pay now on Stripe's secure page." },
 ];
 
 const EMPTY_ADDRESS: ShippingAddress = {
@@ -46,6 +51,8 @@ export default function CheckoutContent() {
     const { data, isLoading } = useGetCartQuery(undefined, { skip: !user });
     const [createOrder, { isLoading: isPlacing }] = useCreateOrderMutation();
     const [address, setAddress] = useState<ShippingAddress>(EMPTY_ADDRESS);
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("COD");
+
 
     if (!user) {
         return (
@@ -86,7 +93,11 @@ export default function CheckoutContent() {
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         try {
-            const result = await createOrder({ paymentMethod: "COD", shippingAddress: address }).unwrap();
+            const result = await createOrder({ paymentMethod, shippingAddress: address }).unwrap();
+            if(result.checkoutUrl){
+                window.location.assign(result.checkoutUrl);
+                return;
+            }
             toast.success(result.message ?? "Order placed");
             router.push("/account/orders");
         } catch (error) {
@@ -117,9 +128,27 @@ export default function CheckoutContent() {
 
                     <div className="space-y-2 border-t pt-4">
                         <h2 className="font-semibold">Payment</h2>
-                        <p className="rounded-md border bg-gray-50 p-3 text-sm">
-                            <strong>Cash on delivery</strong>: pay when your books arrive.
-                        </p>
+                        {PAYMENT_OPTIONS.map((option) => (
+                            <label
+                                key={option.value}
+                                className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 text-sm ${paymentMethod === option.value ? "border-orange-500 bg-orange-50" : "bg-white"}`}
+                            >
+                                <input
+                                    type="radio"
+                                    name="paymentMethod"
+                                    value={option.value}
+                                    checked={paymentMethod === option.value}
+                                    onChange={() => setPaymentMethod(option.value)}
+                                    className="mt-1 accent-orange-500"
+                                />
+                                <span>
+                                    <strong>{option.label}</strong>: {option.description}
+                                </span>
+
+                            </label>
+                        ))
+
+                        }
                     </div>
                 </CardContent>
             </Card>
@@ -145,7 +174,7 @@ export default function CheckoutContent() {
                     </div>
                     <Button type="submit" disabled={isPlacing} className="w-full rounded-md normal-case tracking-normal">
                         {isPlacing && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-                        Place order
+                        {paymentMethod === "Card" ? "Continue to payment" : "Place order"}
                     </Button>
                 </CardContent>
             </Card>

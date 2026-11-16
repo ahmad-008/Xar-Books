@@ -4,6 +4,7 @@ import { Cart } from "../models/Cart";
 import { Product } from "../models/Product";
 import { IShippingAddress, Order } from "../models/Order";
 import { AppError } from "../utils/AppError";
+import { createCheckoutSession, releaseOrder } from "../utils/orderPayment";
 
 const ADDRESS_FIELDS = [
     "fullName",
@@ -43,8 +44,8 @@ const readAddress = (input: unknown) : IShippingAddress => {
 export const createOrder = async (req: Request, res: Response) => {
     const {paymentMethod, shippingAddress} = req.body ?? {};
 
-    if (paymentMethod !== "COD") {
-        throw new AppError("Only cash on delivery is available right now", 400);
+    if (paymentMethod !== "COD" && paymentMethod !== "Card") {
+        throw new AppError("Please choose a payment method", 400);
     }
 
     const address = readAddress(shippingAddress);
@@ -111,7 +112,18 @@ export const createOrder = async (req: Request, res: Response) => {
         return newOrder;
     });
 
-    res.status(201).json({ success: true, message: "Order placed", data: order });
+    if(paymentMethod === "COD"){
+        res.status(201).json({success: true,message: "Order placed", data: order});
+        return;
+    }
+
+    try{
+        const checkoutUrl = await createCheckoutSession(order);
+        res.status(201).json({success: true, message:"Redirecting to payment", data: order, checkoutUrl});
+    } catch (error) {
+        await releaseOrder(order._id);
+        throw error;
+    }
 };
 
 export const getMyOrders = async (req: Request, res: Response) => {

@@ -9,6 +9,7 @@ import productRoutes from "./routes/product.routes";
 import cartRoutes from "./routes/cart.routes";
 import wishlistRoutes from "./routes/wishlist.routes";
 import orderRoutes from "./routes/order.routes";
+import { stripeWebhook } from "./controllers/webhook.controller";
 
 
 const app = express();
@@ -23,6 +24,9 @@ app.use(
         }
     )
 );
+
+//Stripe needs the raw body to check its signature, so this comes before express.json
+app.post("/api/webhooks/stripe", express.raw({type: "application/json"}), stripeWebhook);
 
 // read JSON request bodies into req.body
 app.use(express.json());
