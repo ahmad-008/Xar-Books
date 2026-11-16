@@ -7,13 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { logout  , toggleLoginDialog } from '@/store/slice/userSlice';
 import { RootState } from '@/store/store';
-import { BookLock, ChevronRight, FileTerminal, Heart, HelpCircle, Lock, LogOut, Menu, Package, PiggyBank, Search, ShoppingCart, User, User2 } from 'lucide-react';
+import { BookLock, ChevronRight, FileTerminal, Heart, HelpCircle, Lock, LogOut, Menu, Package, PiggyBank, Receipt, Search, ShoppingCart, User, User2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import AuthPage from './AuthPage';
+import NavBar from './NavBar';
 import toast from 'react-hot-toast';
 import { api, useGetCartQuery, useLogoutMutation } from '@/store/api';
 
@@ -141,6 +142,11 @@ const Header = () => {
       icon: <PiggyBank className='h-5 w-5 ' />,
       label: "My Listings",
       onclick: () => handleProtectionNavigation('/account/selling-products'),
+    },
+    {
+      icon: <Receipt className='h-5 w-5 ' />,
+      label: "My Sales",
+      onclick: () => handleProtectionNavigation('/account/sales'),
     },
     {
       icon: <ShoppingCart className='h-5 w-5 ' />,
@@ -400,6 +406,8 @@ const Header = () => {
         </Link>
 
       </div>
+
+      <NavBar />
 
       <AuthPage
         isLoginOpen={isLoginDialogOpen}

@@ -82,6 +82,11 @@ export default function MyOrdersContent() {
                                         <Image src={item.image || "/images/no-book.jpg"} alt={item.title} fill sizes="40px" className="object-cover" />
                                     </div>
                                     <span className="line-clamp-1 min-w-0 flex-1 text-sm">{item.title}</span>
+                                    {order.orderStatus !== "cancelled" && (
+                                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${STATUS_STYLES[item.status]}`}>
+                                            {item.status}
+                                        </span>
+                                    )}
                                     <span className="text-sm">${item.price.toFixed(2)}</span>
                                 </li>
                             ))}

@@ -95,6 +95,7 @@ export interface OrderItem {
     image: string;
     price: number;
     shippingCharge: number;
+    status: "processing" | "shipped" | "delivered";
 }
 
 export type PaymentMethod = "COD" | "Card";
@@ -121,6 +122,27 @@ interface OrderResponse {
 interface OrderListResponse {
     success: boolean;
     data: Order[];
+}
+
+export interface SellingOrder {
+    _id: string;
+    createdAt: string;
+    shippingAddress: ShippingAddress;
+    paymentMethod: PaymentMethod;
+    paymentStatus: Order["paymentStatus"];
+    orderStatus: Order["orderStatus"];
+    items: OrderItem[];
+}
+
+interface SellingOrderResponse {
+    success: boolean;
+    message?: string;
+    data: SellingOrder;
+}
+
+interface SellingOrderListResponse {
+    success: boolean;
+    data: SellingOrder[];
 }
 
 interface ProductResponse {
@@ -259,6 +281,16 @@ export const api = createApi({
             providesTags: ["Order"],
         }),
 
+        getSellingOrders: builder.query<SellingOrderListResponse, void>({
+            query: () => "/orders/selling",
+            providesTags: ["Order"],
+        }),
+
+        updateSellingStatus: builder.mutation<SellingOrderResponse, { id: string; status: "shipped" | "delivered" }>({
+            query: ({ id, status }) => ({ url: `/orders/selling/${id}`, method: "PATCH", body: { status } }),
+            invalidatesTags: ["Order"],
+        }),
+
 
 
     }),
@@ -288,5 +320,7 @@ export const {
     useCreateOrderMutation,
     useGetMyOrdersQuery,
     useGetOrderQuery,
+    useGetSellingOrdersQuery,
+    useUpdateSellingStatusMutation,
 } = api;
 

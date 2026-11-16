@@ -3,6 +3,13 @@ const COLLEGE_BOOKS = "College Books (Higher Education Textbooks)";
 const SCHOOL_BOOKS = "School Books (up to 12th)";
 const EXAM_BOOKS = "Exam/Test Preparation Books";
 
+export const categoryLinks = [
+  { label: "College", value: COLLEGE_BOOKS },
+  { label: "Exam Prep", value: EXAM_BOOKS },
+  { label: "Reading", value: READING_BOOKS },
+  { label: "School", value: SCHOOL_BOOKS },
+];
+
 export const filters = {
   condition: ["Excellent", "Good", "Fair"],
   category: [COLLEGE_BOOKS, EXAM_BOOKS, READING_BOOKS, SCHOOL_BOOKS],
