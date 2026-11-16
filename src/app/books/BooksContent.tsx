@@ -31,6 +31,8 @@ const filterGroups: { key: FilterKey; label: string }[] = [
 const BooksContent = () => {
     const searchParams = useSearchParams();
     const searchTerm = (searchParams.get("search") || "").trim().toLowerCase();
+    const categoryParam = searchParams.get("category") || "";
+    const categoryFromUrl = filters.category.includes(categoryParam) ? [categoryParam] : [];
     
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -38,13 +40,21 @@ const BooksContent = () => {
     const [selectedFilters, setSelectedFilters] = useState<Record<FilterKey, string[]>>({
         condition: [],
         classType: [],
-        category: [],
+        category: categoryFromUrl,
     });
 
     // a new search should always start from the first page
     const [lastSearchTerm, setLastSearchTerm] = useState(searchTerm);
     if (lastSearchTerm !== searchTerm) {
         setLastSearchTerm(searchTerm);
+        setCurrentPage(1);
+    }
+
+    // a category link in the navigation bar replaces the category filter
+    const [lastCategoryParam, setLastCategoryParam] = useState(categoryParam);
+    if (lastCategoryParam !== categoryParam) {
+        setLastCategoryParam(categoryParam);
+        setSelectedFilters((prev) => ({ ...prev, category: categoryFromUrl }));
         setCurrentPage(1);
     }
 
