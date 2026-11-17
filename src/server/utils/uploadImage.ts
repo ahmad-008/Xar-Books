@@ -25,12 +25,12 @@ export const readImages = (formData: FormData) => {
     return files;
 };
 
-export const uploadImage = async (file: File) => {
+export const uploadImage = async (file: File, folder = "xar-books/products") => {
     const buffer = Buffer.from(await file.arrayBuffer());
 
     return new Promise<string>((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
-            { folder: "xar-books/products", resource_type: "image" },
+            { folder, resource_type: "image" },
             (error, result?: UploadApiResponse) => {
                 if (error || !result) return reject(error ?? new Error("upload failed"));
                 resolve(result.secure_url);

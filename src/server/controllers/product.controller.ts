@@ -63,7 +63,7 @@ export const createProduct = async (req: NextRequest) => {
 
     await Product.validate({ ...data, images: files.map(() => "pending") });
 
-    const images = await Promise.all(files.map(uploadImage));
+    const images = await Promise.all(files.map((file) => uploadImage(file)));
     const product = await Product.create({ ...data, images });
 
     return NextResponse.json(
@@ -98,8 +98,8 @@ export const getProducts = async (req: NextRequest) => {
     const sort = query.get("sort");
     const sortBy: Record<string, SortOrder> =
         sort === "price-asc" ? { finalPrice: 1 } :
-        sort === "price-desc" ? { finalPrice: -1 } :
-        { createdAt: -1 };
+            sort === "price-desc" ? { finalPrice: -1 } :
+                { createdAt: -1 };
 
     const page = Math.max(1, Math.floor(Number(query.get("page"))) || 1);
     const limit = Math.min(50, Math.max(1, Math.floor(Number(query.get("limit"))) || 12));

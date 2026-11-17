@@ -104,7 +104,7 @@ const Header = () => {
           <div className='flex space-x-4 items-center p-2 border-b' >
             <Avatar className='w-12 h-12 -ml-2 rounded-full' >
               {user?.profilePicture ? (
-                <AvatarImage alt='user_image'></AvatarImage>
+                <AvatarImage src={user.profilePicture}  alt={user.name}/>
               ) : (
                 <AvatarFallback>{userPlacholder}</AvatarFallback>
               )}
@@ -284,7 +284,7 @@ const Header = () => {
               <Button variant='ghost' className='normal-case tracking-normal' >
                 <Avatar className='w-8 h-8 rounded-full' >
                   {user?.profilePicture ? (
-                    <AvatarImage alt='user_image'></AvatarImage>
+                    <AvatarImage src={user.profilePicture}  alt={user.name}/>
                   ) : userPlacholder ? (
                     <AvatarFallback>{userPlacholder}</AvatarFallback>
                   ) : (
