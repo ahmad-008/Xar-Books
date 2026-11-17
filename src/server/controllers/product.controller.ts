@@ -4,7 +4,7 @@ import { IProduct, Product } from "../models/Product";
 import { User } from "../models/User";
 import { AppError } from "../utils/AppError";
 import { requireUserId } from "../utils/auth";
-import { Params } from "../utils/http";
+import { Params, readJson } from "../utils/http";
 import { deleteImage, readImages, uploadImage } from "../utils/uploadImage";
 
 const toNumber = (value: unknown) =>
@@ -159,4 +159,58 @@ export const deleteProduct = async (req: NextRequest, { id }: Params) => {
     });
 
     return NextResponse.json({ success: true, message: "Book deleted" });
+};
+
+const TEXT_FIELDS = ["title", "subject", "category", "condition", "classType","author","edition","description"] as const;
+const OPTIONAL_FIELDS =["author","edition", "description"];
+const NUMBER_FIELDS = ["price", "finalPrice","shippingCharge"] as const;
+
+export const updateProduct = async (req: NextRequest, { id }: Params) => {
+    const userId = requireUserId(req);
+
+    if (!isValidObjectId(id)) {
+        throw new AppError("Book not found", 404);
+    }
+
+    const product = await Product.findOne({ _id: id, seller: userId });
+    if (!product) {
+        throw new AppError("Book not found", 404);
+    }
+
+    if (product.isSold) {
+        throw new AppError("A sold book can't be edited", 400);
+    }
+
+    const body = await readJson(req);
+
+    for (const field of TEXT_FIELDS) {
+        const value = body[field];
+        if (value === undefined) continue;
+        if (typeof value !== "string") {
+            throw new AppError(`${field} must be text`, 400);
+        }
+        const trimmed = value.trim();
+        if (!trimmed && OPTIONAL_FIELDS.includes(field)) {
+            product.set(field, undefined);
+        } else {
+            product.set(field, trimmed);
+        }
+    }
+
+    for (const field of NUMBER_FIELDS) {
+        const value = body[field];
+        if (value === undefined) continue;
+        if (typeof value !== "number" || !Number.isFinite(value)) {
+            throw new AppError("Price, selling price and shipping must be numbers", 400);
+        }
+        product.set(field, value);
+    }
+
+    if (product.finalPrice > product.price) {
+        throw new AppError("Selling price can't be higher than the original price", 400);
+    }
+
+    await product.save();
+
+    return NextResponse.json({ success: true, message: "Book updated", data: product });
 };

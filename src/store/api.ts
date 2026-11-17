@@ -146,6 +146,10 @@ interface SellingOrderListResponse {
     data: SellingOrder[];
 }
 
+export type ProductUpdate = Partial<
+    Pick<Product, "title" | "subject" | "category" | "condition" | "classType" | "author" | "edition" | "description" | "price" | "finalPrice" | "shippingCharge">
+>;
+
 interface ProductResponse {
     success: boolean;
     message?: string;
@@ -225,6 +229,11 @@ export const api = createApi({
         createProduct: builder.mutation<ProductResponse, FormData>({
             query: (body) => ({ url: "/products", method: "POST", body }),
             invalidatesTags: ["Product"],
+        }),
+
+        updateProduct: builder.mutation<ProductResponse, { id: string; body: ProductUpdate }>({
+            query: ({ id, body }) => ({ url: `/products/${id}`, method: "PATCH", body }),
+            invalidatesTags: ["Product", "Cart", "Wishlist"],
         }),
 
         deleteProduct: builder.mutation<MessageResponse, string>({
@@ -323,6 +332,7 @@ export const {
     useGetProductQuery,
     useGetMyProductsQuery,
     useCreateProductMutation,
+    useUpdateProductMutation,
     useDeleteProductMutation,
     useGetCartQuery,
     useAddToCartMutation,
