@@ -108,7 +108,7 @@ export interface Order {
     shippingTotal: number;
     totalAmount: number;
     paymentMethod: "COD" | "Card";
-    paymentStatus: "pending" | "paid" | "failed";
+    paymentStatus: "pending" | "paid" | "failed" | "refunded";
     orderStatus: "processing" | "shipped" | "delivered" | "cancelled";
     createdAt: string;
 }
@@ -291,6 +291,11 @@ export const api = createApi({
             providesTags: ["Order"],
         }),
 
+        cancelOrder: builder.mutation<OrderResponse, string>({
+            query: (id) => ({ url: `/orders/${id}/cancel`, method: "POST" }),
+            invalidatesTags: ["Order", "Product"],
+        }),
+
         getSellingOrders: builder.query<SellingOrderListResponse, void>({
             query: () => "/orders/selling",
             providesTags: ["Order"],
@@ -344,6 +349,7 @@ export const {
     useCreateOrderMutation,
     useGetMyOrdersQuery,
     useGetOrderQuery,
+    useCancelOrderMutation,
     useGetSellingOrdersQuery,
     useUpdateSellingStatusMutation,
     useUpdateProfileMutation,

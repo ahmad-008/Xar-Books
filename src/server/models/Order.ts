@@ -2,7 +2,7 @@ import { Schema, Types, model, Model, models } from "mongoose";
 
 
 export const PAYMENT_METHODS = ["COD", "Card"] as const;
-export const PAYMENT_STATUSES = ["pending", "paid", "failed"] as const;
+export const PAYMENT_STATUSES = ["pending", "paid", "failed", "refunded"] as const;
 export const ORDER_STATUSES = ["processing", "shipped", "delivered","cancelled"] as const;
 export const ITEM_STATUSES = ["processing", "shipped", "delivered"] as const;
 
@@ -39,6 +39,7 @@ export interface IOrder {
     paymentStatus: (typeof PAYMENT_STATUSES)[number];
     orderStatus: (typeof ORDER_STATUSES)[number];
     stripeSessionId?: string;
+    paymentIntentId?: string;
     createdAt: Date;
 }
 
@@ -86,6 +87,7 @@ const orderSchema = new Schema<IOrder>({
         paymentStatus: { type: String, enum: PAYMENT_STATUSES, default: "pending" },
         orderStatus: { type: String, enum: ORDER_STATUSES, default: "processing" },
         stripeSessionId: { type: String, index: true, sparse: true },
+        paymentIntentId: { type: String },
 
 },
     {timestamps : true}
