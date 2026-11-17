@@ -6,7 +6,7 @@ import { Product } from "../models/Product";
 import { AppError } from "../utils/AppError";
 import { requireUserId } from "../utils/auth";
 import { Params, appUrl, readJson } from "../utils/http";
-import { createCheckoutSession, releaseOrder } from "../utils/orderPayment";
+import { cancelOrderByBuyer, createCheckoutSession, releaseOrder } from "../utils/orderPayment";
 
 const ADDRESS_FIELDS = [
     "fullName",
@@ -144,6 +144,21 @@ export const getOrderById = async (req: NextRequest, { id }: Params) => {
     }
 
     return NextResponse.json({ success: true, data: order });
+};
+
+export const cancelOrder = async (req: NextRequest, { id }: Params) => {
+    const userId = requireUserId(req);
+
+    if (!isValidObjectId(id)) {
+        throw new AppError("Order not found", 404);
+    }
+
+    const order = await cancelOrderByBuyer(id, userId);
+    const message = order.paymentStatus === "refunded"
+        ? "Order cancelled. Your refund is on its way"
+        : "Order cancelled";
+
+    return NextResponse.json({ success: true, message, data: order });
 };
 
 const overallStatus = (items: IOrderItem[]) => {

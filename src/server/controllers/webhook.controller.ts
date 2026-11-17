@@ -28,9 +28,11 @@ export const stripeWebhook = async (req: NextRequest) => {
     }
 
     if (event.type === "checkout.session.completed" && event.data.object.payment_status === "paid") {
+        const session = event.data.object;
+        const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
         await Order.updateOne(
-            { stripeSessionId: event.data.object.id, paymentStatus: "pending" },
-            { $set: { paymentStatus: "paid" } }
+            { stripeSessionId: session.id, paymentStatus: "pending" },
+            { $set: { paymentStatus: "paid", paymentIntentId } }
         );
     }
 
