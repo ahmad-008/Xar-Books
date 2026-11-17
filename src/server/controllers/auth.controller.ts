@@ -6,15 +6,10 @@ import { IUser, User } from "../models/User";
 import { AppError } from "../utils/AppError";
 import { clearAuthCookie, requireUserId, setAuthCookie } from "../utils/auth";
 import { appUrl, readJson } from "../utils/http";
+import { toPublicUser } from "../utils/publicUser";
 import { sendEmail } from "../utils/sendEmail";
 
-const toPublicUser = (user: HydratedDocument<IUser>) => ({
-    id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    isEmailVerified: user.isEmailVerified,
-});
+
 
 const hashToken = (token: string) => crypto.createHash("sha256").update(token).digest("hex");
 

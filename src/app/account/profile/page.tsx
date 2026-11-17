@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import ComingSoon from "@/app/components/ComingSoon";
+import ProfileContent from "@/app/components/ProfileContent";
 
 export const metadata: Metadata = {
   title: "My Profile | Xar Books",
@@ -7,9 +7,8 @@ export const metadata: Metadata = {
 
 export default function ProfilePage() {
   return (
-    <ComingSoon
-      title="My Profile"
-      description="Soon you'll be able to view and edit your profile here."
-    />
+    <div className="mx-auto max-w-2xl px-4 py-10">
+      <ProfileContent />
+    </div>
   );
 }

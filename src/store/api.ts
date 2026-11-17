@@ -10,6 +10,7 @@ export interface User {
     email: string;
     role: "user" | "admin";
     isEmailVerified: boolean;
+    phoneNumber?: string;
     profilePicture?: string;
 }
 
@@ -291,6 +292,19 @@ export const api = createApi({
             invalidatesTags: ["Order"],
         }),
 
+        updateProfile: builder.mutation<AuthResponse,{name?: string; phoneNumber?: string}>({
+            query: (body) => ({url: "/user/me", method: "PATCH",body}),
+            invalidatesTags: ["User"],
+        }),
+
+         updateAvatar: builder.mutation<AuthResponse, FormData>({
+            query: (body) => ({ url: "/users/me/avatar", method: "POST", body }),
+            invalidatesTags: ["User"],
+        }),
+
+        changePassword: builder.mutation<MessageResponse, { currentPassword: string; newPassword: string }>({
+            query: (body) => ({ url: "/users/me/password", method: "PATCH", body }),
+        }),
 
 
     }),
@@ -322,5 +336,8 @@ export const {
     useGetOrderQuery,
     useGetSellingOrdersQuery,
     useUpdateSellingStatusMutation,
+    useUpdateProfileMutation,
+    useUpdateAvatarMutation,
+    useChangePasswordMutation,
 } = api;
 
