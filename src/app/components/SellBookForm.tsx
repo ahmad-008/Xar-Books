@@ -4,7 +4,7 @@ import { RootState } from "@/store/store";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ImagePicker, { PickedImage } from "@/app/components/ImagePicker";
-import { useCreateProductMutation } from "@/store/api";
+import { Product, useCreateProductMutation, useUpdateProductMutation } from "@/store/api";
 import { Controller, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { toggleLoginDialog } from "@/store/slice/userSlice";
@@ -40,23 +40,40 @@ const emptyForm: SellFormData = {
     classType: "", price: "", finalPrice: "", shippingCharge: "", description: "",
 };
 
+const toForm = (product: Product): SellFormData => ({
+    title: product.title,
+    author: product.author ?? "",
+    edition: product.edition ?? "",
+    subject: product.subject,
+    category: product.category,
+    condition: product.condition,
+    classType: product.classType,
+    price: String(product.price),
+    finalPrice: String(product.finalPrice),
+    shippingCharge: String(product.shippingCharge),
+    description: product.description ?? "",
+});
+
 const ErrorText = ({ message }: { message?: string }) =>
     message ? <p className="mt-1 text-sm text-red-500" >{message}</p> : null;
 
 
-export default function SellBookForm() {
+export default function SellBookForm({ product }: { product?: Product }) {
+    const isEditing = Boolean(product);
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user.user);
     const [images, setImages] = useState<PickedImage[]>([]);
     const [imageError, setImageError] = useState("");
-    const [createProduct, { isLoading }] = useCreateProductMutation();
+    const [createProduct, { isLoading: isCreating }] = useCreateProductMutation();
+    const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
+    const isLoading = isCreating || isUpdating;
     const router = useRouter();
 
 
     const {
         register, handleSubmit,
         control, reset, formState: { errors },
-    } = useForm<SellFormData>({ defaultValues: emptyForm });
+    } = useForm<SellFormData>({ defaultValues: product ? toForm(product) : emptyForm });
 
 
     if (!user) {
@@ -90,6 +107,32 @@ export default function SellBookForm() {
     };
 
     const onSubmit = async (data: SellFormData) => {
+        if (product) {
+            try {
+                const result = await updateProduct({
+                    id: product._id,
+                    body: {
+                        title: data.title,
+                        author: data.author,
+                        edition: data.edition,
+                        subject: data.subject,
+                        category: data.category,
+                        condition: data.condition as Product["condition"],
+                        classType: data.classType,
+                        description: data.description,
+                        price: Number(data.price),
+                        finalPrice: Number(data.finalPrice),
+                        shippingCharge: data.shippingCharge.trim() === "" ? 0 : Number(data.shippingCharge),
+                    },
+                }).unwrap();
+                toast.success(result.message ?? "Book updated");
+                router.push("/account/selling-products");
+            } catch (error) {
+                toast.error(getErrorMessage(error));
+            }
+            return;
+        }
+
         if (images.length === 0) {
             setImageError("Add at least one photo");
             return;
@@ -114,23 +157,27 @@ export default function SellBookForm() {
     };
 
     const onInvalid = () => {
-        if (images.length === 0) setImageError("Add at least one photo");
+        if (!isEditing && images.length === 0) setImageError("Add at least one photo");
     };
 
     return (
 
         <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-8 rounded-lg border bg-white p-6 shadow-sm" >
             <div>
-                <h1 className="text-2xl font-bold" >Sell your book</h1>
-                <p className="text-sm text-gray-600">Fill in the details and add clear photos of your book.</p>
+                <h1 className="text-2xl font-bold" >{isEditing ? "Edit your listing" : "Sell your book"}</h1>
+                <p className="text-sm text-gray-600">
+                    {isEditing ? "Update the details or price of your book." : "Fill in the details and add clear photos of your book."}
+                </p>
             </div>
 
+            {!isEditing && (
             <section className="space-y-3" >
                 <h2 className="text-lg font-semibold">Photos</h2>
                 <ImagePicker images={images} onChange={handleImagesChange} />
                 <p className="text-xs text-gray-500">Up to 4 photos. The first one is the cover.</p>
                 <ErrorText message={imageError} />
             </section>
+            )}
 
             <section className="space-y-4">
                 <h2 className="text-lg font-semibold" >Book details</h2>
@@ -304,7 +351,7 @@ export default function SellBookForm() {
             </section>
 
             <Button type="submit" disabled={isLoading} className="w-full rounded-md font-bold normal-case tracking-normal">
-                {isLoading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : "List my book"}
+                {isLoading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : isEditing ? "Save changes" : "List my book"}
             </Button>
 
        

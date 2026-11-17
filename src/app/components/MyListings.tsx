@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
-import { LoaderCircle, Plus, Trash2 } from "lucide-react";
+import { LoaderCircle, Pencil, Plus, Trash2 } from "lucide-react";
 import { BookLoader } from "@/lib/BookLoader";
 import { useDeleteProductMutation, useGetMyProductsQuery } from "@/store/api";
 import { toggleLoginDialog } from "@/store/slice/userSlice";
@@ -110,7 +110,15 @@ export default function MyListings() {
                                     Listed {formatDistanceToNow(new Date(book.createdAt), { addSuffix: true })}
                                 </p>
 
-                                <div className="mt-auto flex justify-end pt-2">
+                                <div className="mt-auto flex justify-end gap-2 pt-2">
+                                    {!book.isSold && (
+                                        <Button asChild variant="outline" size="sm" className="normal-case tracking-normal">
+                                            <Link href={`/account/selling-products/${book._id}/edit`}>
+                                                <Pencil className="mr-1 h-4 w-4" />
+                                                Edit
+                                            </Link>
+                                        </Button>
+                                    )}
                                     <Button
                                         variant="outline"
                                         size="sm"
