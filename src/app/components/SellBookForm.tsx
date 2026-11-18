@@ -4,7 +4,7 @@ import { RootState } from "@/store/store";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ImagePicker, { PickedImage } from "@/app/components/ImagePicker";
-import { Product, useCreateProductMutation, useUpdateProductMutation } from "@/store/api";
+import { Product, useCreateProductMutation, useUpdateProductImagesMutation, useUpdateProductMutation } from "@/store/api";
 import { Controller, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { toggleLoginDialog } from "@/store/slice/userSlice";
@@ -62,11 +62,14 @@ export default function SellBookForm({ product }: { product?: Product }) {
     const isEditing = Boolean(product);
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user.user);
-    const [images, setImages] = useState<PickedImage[]>([]);
+    const [images, setImages] = useState<PickedImage[]>(
+        () => product?.images.map((url) => ({ id: url, preview: url })) ?? []
+    );
     const [imageError, setImageError] = useState("");
     const [createProduct, { isLoading: isCreating }] = useCreateProductMutation();
     const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
-    const isLoading = isCreating || isUpdating;
+    const [updateProductImages, { isLoading: isUpdatingImages }] = useUpdateProductImagesMutation();
+    const isLoading = isCreating || isUpdating || isUpdatingImages;
     const router = useRouter();
 
 
@@ -107,8 +110,20 @@ export default function SellBookForm({ product }: { product?: Product }) {
     };
 
     const onSubmit = async (data: SellFormData) => {
+        if (images.length === 0) {
+            setImageError("Add at least one photo");
+            return;
+        }
+
         if (product) {
             try {
+                const photosChanged = images.map((image) => image.id).join("|") !== product.images.join("|");
+                if (photosChanged) {
+                    const photos = new FormData();
+                    images.forEach((image) => photos.append("photos", image.file ?? image.preview));
+                    await updateProductImages({ id: product._id, body: photos }).unwrap();
+                }
+
                 const result = await updateProduct({
                     id: product._id,
                     body: {
@@ -133,17 +148,12 @@ export default function SellBookForm({ product }: { product?: Product }) {
             return;
         }
 
-        if (images.length === 0) {
-            setImageError("Add at least one photo");
-            return;
-        }
-
 
         const formData = new FormData();
         Object.entries(data).forEach(([key, value]) => {
             if (value.trim() !== "") formData.append(key, value.trim());
         });
-        images.forEach((image) => formData.append("images", image.file));
+        images.forEach((image) => image.file && formData.append("images", image.file));
 
         try {
             const result = await createProduct(formData).unwrap();
@@ -157,7 +167,7 @@ export default function SellBookForm({ product }: { product?: Product }) {
     };
 
     const onInvalid = () => {
-        if (!isEditing && images.length === 0) setImageError("Add at least one photo");
+        if (images.length === 0) setImageError("Add at least one photo");
     };
 
     return (
@@ -166,18 +176,16 @@ export default function SellBookForm({ product }: { product?: Product }) {
             <div>
                 <h1 className="text-2xl font-bold" >{isEditing ? "Edit your listing" : "Sell your book"}</h1>
                 <p className="text-sm text-gray-600">
-                    {isEditing ? "Update the details or price of your book." : "Fill in the details and add clear photos of your book."}
+                    {isEditing ? "Update the photos, details or price of your book." : "Fill in the details and add clear photos of your book."}
                 </p>
             </div>
 
-            {!isEditing && (
             <section className="space-y-3" >
                 <h2 className="text-lg font-semibold">Photos</h2>
                 <ImagePicker images={images} onChange={handleImagesChange} />
                 <p className="text-xs text-gray-500">Up to 4 photos. The first one is the cover.</p>
                 <ErrorText message={imageError} />
             </section>
-            )}
 
             <section className="space-y-4">
                 <h2 className="text-lg font-semibold" >Book details</h2>

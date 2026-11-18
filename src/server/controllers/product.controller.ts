@@ -5,7 +5,7 @@ import { User } from "../models/User";
 import { AppError } from "../utils/AppError";
 import { requireUserId } from "../utils/auth";
 import { Params, readJson } from "../utils/http";
-import { deleteImage, readImages, uploadImage } from "../utils/uploadImage";
+import { MAX_FILES, checkImage, deleteImage, readImages, uploadImage } from "../utils/uploadImage";
 
 const toNumber = (value: unknown) =>
     typeof value === "string" && value.trim() !== "" ? Number(value) : NaN;
@@ -213,4 +213,85 @@ export const updateProduct = async (req: NextRequest, { id }: Params) => {
     await product.save();
 
     return NextResponse.json({ success: true, message: "Book updated", data: product });
+};
+
+const deleteImages = async (urls: string[]) => {
+    const results = await Promise.allSettled(urls.map(deleteImage));
+    results.forEach((result)=>{
+        if(result.status === "rejected")
+            console.error("Image deleted failed:",result.reason);
+
+    });
+
+};
+
+export const updateProductImages = async (req: NextRequest, { id }: Params) => {
+    const userId = requireUserId(req);
+
+    if(!isValidObjectId(id)){
+        throw new AppError("Book not found", 404);
+    }
+
+    const product = await Product.findOne({_id: id, seller: userId});
+    if(!product){
+        throw new AppError("Book not found", 404);
+    }
+
+    if (product.isSold) {
+        throw new AppError("A sold book can't be edited", 400);
+    }
+
+    let formData: FormData;
+    try{
+        formData = await req.formData();
+
+    } catch {
+        throw new AppError("Invalid form data", 400);
+    }
+
+    const photos = formData.getAll("photos");
+    if (photos.length === 0) {
+        throw new AppError("Add at least one image", 400);
+    }
+    if (photos.length > MAX_FILES) {
+        throw new AppError("You can upload up to 4 images", 400);
+    }
+
+    const current = [...product.images];
+    for (const photo of photos) {
+        if (typeof photo === "string") {
+            if (!current.includes(photo)) {
+                throw new AppError("One of the photos doesn't belong to this book", 400);
+            }
+        } else {
+            checkImage(photo);
+        }
+    }
+
+    const keptUrls = photos.filter((photo): photo is string => typeof photo === "string");
+    if (new Set(keptUrls).size !== keptUrls.length) {
+        throw new AppError("The same photo was added twice", 400);
+    }
+
+    const uploaded: string[] = [];
+    try {
+        const images = await Promise.all(
+            photos.map(async (photo) => {
+                if (typeof photo === "string") return photo;
+                const url = await uploadImage(photo);
+                uploaded.push(url);
+                return url;
+            })
+        );
+
+        product.images = images;
+        await product.save();
+    } catch (error) {
+        await deleteImages(uploaded);
+        throw error;
+    }
+
+    await deleteImages(current.filter((url) => !keptUrls.includes(url)));
+
+    return NextResponse.json({ success: true, message: "Photos updated", data: product });
 };
