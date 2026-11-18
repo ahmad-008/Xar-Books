@@ -8,7 +8,7 @@ import { compressImage } from "@/lib/compressImage";
 
 export interface PickedImage {
     id: string;
-    file: File;
+    file?: File;
     preview: string;
 }
 
@@ -57,13 +57,26 @@ export default function ImagePicker({ images, onChange }: ImagePickerProps) {
 
     const removeImage = (id: string) => onChange(images.filter((image) => image.id !== id));
 
+    const makeCover = (id: string) => {
+        const chosen = images.find((image) => image.id === id);
+        if (chosen) onChange([chosen, ...images.filter((image) => image.id !== id)]);
+    };
+
     return (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {images.map((image, index) => (
                 <div key={image.id} className="relative aspect-3/4 overflow-hidden rounded-md border bg-gray-50">
                     <Image src={image.preview} alt={`Book photo ${index + 1}`} fill unoptimized className="object-cover" />
-                    {index === 0 && (
+                    {index === 0 ? (
                         <span className="absolute left-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-xs text-white">Cover</span>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={() => makeCover(image.id)}
+                            className="absolute bottom-1 left-1 right-1 rounded bg-white/90 py-1 text-xs font-medium shadow hover:bg-white"
+                        >
+                            Make cover
+                        </button>
                     )}
                     <button
                         type="button"

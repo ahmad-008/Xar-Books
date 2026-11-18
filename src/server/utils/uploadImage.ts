@@ -4,7 +4,17 @@ import { AppError } from "./AppError";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE = 1024 * 1024;
-const MAX_FILES = 4;
+export const MAX_FILES = 4;
+
+export const checkImage = (file:File) => {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+            throw new AppError("Only JPG, PNG or WEBP images are allowed", 400);
+        }
+    if (file.size > MAX_SIZE) {
+            throw new AppError("Each image must be 1 MB or smaller", 400);
+        }    
+}
+
 
 export const readImages = (formData: FormData) => {
     const files = formData.getAll("images").filter((value): value is File => value instanceof File);
@@ -13,15 +23,7 @@ export const readImages = (formData: FormData) => {
         throw new AppError("You can upload up to 4 images", 400);
     }
 
-    for (const file of files) {
-        if (!ALLOWED_TYPES.includes(file.type)) {
-            throw new AppError("Only JPG, PNG or WEBP images are allowed", 400);
-        }
-        if (file.size > MAX_SIZE) {
-            throw new AppError("Each image must be 1 MB or smaller", 400);
-        }
-    }
-
+    files.forEach(checkImage);
     return files;
 };
 

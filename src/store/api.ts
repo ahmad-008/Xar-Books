@@ -236,6 +236,11 @@ export const api = createApi({
             invalidatesTags: ["Product", "Cart", "Wishlist"],
         }),
 
+        updateProductImages: builder.mutation<ProductResponse, { id: string; body: FormData }>({
+            query: ({ id, body }) => ({ url: `/products/${id}/images`, method: "PUT", body }),
+            invalidatesTags: ["Product", "Cart", "Wishlist"],
+        }),
+
         deleteProduct: builder.mutation<MessageResponse, string>({
             query: (id) => ({ url: `/products/${id}`, method: "DELETE" }),
             invalidatesTags: ["Product"],
@@ -342,6 +347,7 @@ export const {
     useGetMyProductsQuery,
     useCreateProductMutation,
     useUpdateProductMutation,
+    useUpdateProductImagesMutation,
     useDeleteProductMutation,
     useGetCartQuery,
     useAddToCartMutation,
