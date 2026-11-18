@@ -320,6 +320,10 @@ export const api = createApi({
             query: (body) => ({ url: "/users/me/password", method: "PATCH", body }),
         }),
 
+        sendContactMessage: builder.mutation<MessageResponse, { name: string; email: string; subject?: string; message: string }>({
+            query: (body) => ({ url: "/contact", method: "POST", body }),
+        }),
+
 
     }),
 });
@@ -355,5 +359,6 @@ export const {
     useUpdateProfileMutation,
     useUpdateAvatarMutation,
     useChangePasswordMutation,
+    useSendContactMessageMutation,
 } = api;
 
