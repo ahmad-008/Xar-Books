@@ -8,6 +8,7 @@ import { clearAuthCookie, requireUserId, setAuthCookie } from "../utils/auth";
 import { appUrl, readJson } from "../utils/http";
 import { toPublicUser } from "../utils/publicUser";
 import { sendEmail } from "../utils/sendEmail";
+import { clearRateLimit, clientIp, rateLimit } from "../utils/rateLimit";
 
 
 
@@ -45,6 +46,7 @@ export const register = async (req: NextRequest) => {
     if (agreeTerms !== true) {
         throw new AppError("You must accept the terms", 400);
     }
+    await rateLimit(`register:${clientIp(req)}`, 5, 60);
 
     const user = await User.create({ name, email, password, agreeTerms });
     try {
@@ -69,6 +71,8 @@ export const login = async (req: NextRequest) => {
     if (typeof email !== "string" || typeof password !== "string") {
         throw new AppError("Email and password are required", 400);
     }
+    const limitKey = `login:${clientIp(req)}:${email.trim().toLowerCase()}`;
+    await rateLimit(limitKey, 5, 15);
 
     const user = await User.findOne({ email: email.trim().toLowerCase() }).select("+password");
     const isPasswordCorrect = user ? await bcrypt.compare(password, user.password) : false;
@@ -76,7 +80,8 @@ export const login = async (req: NextRequest) => {
     if (!user || !isPasswordCorrect) {
         throw new AppError("Invalid email or password", 401);
     }
-
+    
+    await clearRateLimit(limitKey);
     const res = NextResponse.json({ success: true, message: "Logged In", data: toPublicUser(user) });
     setAuthCookie(res, user._id.toString());
     return res;
@@ -104,6 +109,7 @@ export const forgotPassword = async (req: NextRequest) => {
     if (typeof email !== "string") {
         throw new AppError("Email is required", 400);
     }
+    await rateLimit(`forgot:${clientIp(req)}:${email.trim().toLowerCase()}`,3,60);
 
     const user = await User.findOne({ email: email.trim().toLowerCase() });
 
@@ -145,6 +151,7 @@ export const resetPassword = async (req: NextRequest) => {
     if (typeof token !== "string" || typeof password !== "string") {
         throw new AppError("Token and new password are required", 400);
     }
+    await rateLimit(`reset:${clientIp(req)}`,10, 15);
 
     const user = await User.findOne({
         passwordResetToken: hashToken(token),
@@ -171,6 +178,7 @@ export const verifyEmail = async (req: NextRequest) => {
     if (typeof token !== "string") {
         throw new AppError("Verification token is required", 400);
     }
+    await rateLimit(`verify:${clientIp(req)}`,10, 15);
 
     const user = await User.findOne({
         emailVerificationToken: hashToken(token),
@@ -199,6 +207,8 @@ export const resendVerification = async (req: NextRequest) => {
     if (user.isEmailVerified) {
         throw new AppError("Your email is already verified", 400);
     }
+
+    await rateLimit(`resend:${user._id}`,3,60);
 
     try {
         await sendVerificationEmail(user, appUrl(req));

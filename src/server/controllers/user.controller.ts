@@ -5,6 +5,7 @@ import { AppError } from "../utils/AppError";
 import { requireUserId, setAuthCookie } from "../utils/auth";
 import { readJson } from "../utils/http";
 import { toPublicUser } from "../utils/publicUser";
+import { rateLimit } from "../utils/rateLimit";
 import { deleteImage, readImages, uploadImage } from "../utils/uploadImage";
 
 
@@ -90,6 +91,7 @@ export const changePassword = async(req: NextRequest) => {
     if (typeof currentPassword !== "string" || typeof newPassword !== "string"){
         throw new AppError("Current and new password are required", 400);
     }
+    await rateLimit(`password:${userId}`, 5, 15);
 
     const user = await User.findById(userId).select("+password");
     if(!user){

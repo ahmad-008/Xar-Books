@@ -307,7 +307,7 @@ export const api = createApi({
         }),
 
         updateProfile: builder.mutation<AuthResponse,{name?: string; phoneNumber?: string}>({
-            query: (body) => ({url: "/user/me", method: "PATCH",body}),
+            query: (body) => ({ url: "/users/me", method: "PATCH", body }),
             invalidatesTags: ["User"],
         }),
 

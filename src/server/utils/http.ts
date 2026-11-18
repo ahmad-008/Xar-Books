@@ -12,7 +12,9 @@ const fail = (status: number, message: string) =>
 
 const toErrorResponse = (error: unknown) => {
     if (error instanceof AppError) {
-        return fail(error.statusCode, error.message);
+        const res = fail(error.statusCode, error.message);
+        if(error.retryAfter) res.headers.set("Retry-After", String(error.retryAfter));
+        return res;
     }
 
     if (error instanceof mongoose.Error.ValidationError) {
