@@ -9,11 +9,12 @@ const transporter = nodemailer.createTransport({
 });
 
 
-export const sendEmail = async (to: string, subject: string, html: string) => {
+export const sendEmail = async (to: string, subject: string, html: string, replyTo?: string) => {
     await transporter.sendMail({
         from: `"Xar Book" <${process.env.EMAIL_USER}>`,
         to,
         subject,
         html,
+        replyTo,
     });
-}; 
+};
