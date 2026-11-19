@@ -90,7 +90,8 @@ export const cancelOrderByBuyer = async (orderId: string, buyerId: string) => {
         throw new AppError("This order is already cancelled", 400);
     }
 
-    if (order.orderStatus !== "processing" || order.items.some((item) => item.status !== "processing")) {
+    const hasShipped = order.items.some((item) => item.status === "shipped" || item.status === "delivered");
+    if (order.orderStatus !== "processing" || hasShipped) {
         throw new AppError("This order can't be cancelled because a book has already shipped", 400);
     }
 
@@ -120,7 +121,7 @@ export const cancelOrderByBuyer = async (orderId: string, buyerId: string) => {
             {
                 _id: order._id,
                 orderStatus: "processing",
-                items: { $not: { $elemMatch: { status: { $ne: "processing" } } } },
+                items: {$not: {$elemMatch: {status: {$in: ["shipped", "delivered"]}}}},
             },
             { $set: { orderStatus: "cancelled", paymentStatus, paymentIntentId: order.paymentIntentId } },
             { session, returnDocument: "after" }
@@ -129,7 +130,7 @@ export const cancelOrderByBuyer = async (orderId: string, buyerId: string) => {
         if (!updated) return null;
 
         await Product.updateMany(
-            { _id: { $in: updated.items.map((item) => item.product) } },
+            { _id: { $in: updated.items.filter((item)=> item.status !== "cancelled").map((item)=> item.product) } },
             { $set: { isSold: false } },
             { session }
         );
