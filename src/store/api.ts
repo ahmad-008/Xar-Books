@@ -302,6 +302,16 @@ export const api = createApi({
             invalidatesTags: ["Order", "Product"],
         }),
 
+        payOrder: builder.mutation<{ success: boolean; checkoutUrl: string }, string>({
+            query: (id) => ({url: `/orders/${id}/pay`, method: "POST"}),
+            invalidatesTags: ["Order", "Product"],
+        }),
+
+        confirmCheckout:builder.query<OrderResponse, string>({
+            query: (sessionId) => `/orders/confirm?session_id=${encodeURIComponent(sessionId)}`,
+            providesTags: ["Order"],
+        }),
+        
         getSellingOrders: builder.query<SellingOrderListResponse, void>({
             query: () => "/orders/selling",
             providesTags: ["Order"],
@@ -365,6 +375,8 @@ export const {
     useGetMyOrdersQuery,
     useGetOrderQuery,
     useCancelOrderMutation,
+    usePayOrderMutation,
+    useConfirmCheckoutQuery,
     useGetSellingOrdersQuery,
     useUpdateSellingStatusMutation,
     useRejectSellingOrderMutation,

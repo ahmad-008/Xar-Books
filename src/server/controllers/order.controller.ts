@@ -7,7 +7,7 @@ import { User } from "../models/User";
 import { AppError } from "../utils/AppError";
 import { requireUserId } from "../utils/auth";
 import { Params, appUrl, readJson } from "../utils/http";
-import { cancelOrderByBuyer, createCheckoutSession, releaseOrder } from "../utils/orderPayment";
+import { cancelOrderByBuyer, createCheckoutSession, releaseOrder, syncCheckout } from "../utils/orderPayment";
 
 const ADDRESS_FIELDS = [
     "fullName",
@@ -182,6 +182,51 @@ export const cancelOrder = async (req: NextRequest, { id }: Params) => {
         : "Order cancelled";
 
     return NextResponse.json({ success: true, message, data: order });
+};
+
+export const payOrder= async (req: NextRequest, {id}: Params)=> {
+    const userId= requireUserId(req);
+
+    if(!isValidObjectId(id)){
+        throw new AppError("Order not found", 404);
+    }
+
+    const order = await Order.findOne({_id: id, buyer: userId});
+    if(!order){
+        throw new AppError("Order not found", 404);
+    }
+
+    if(order.paymentMethod !== "Card"){
+        throw new AppError("This is a cash on delivery order", 400);
+    }
+    if(order.orderStatus === "cancelled"){
+        throw new AppError("This order was cancelled", 400);
+    }
+
+      const { order: latest, session } = await syncCheckout(order);
+
+    if (latest.paymentStatus === "paid") {
+        throw new AppError("This order is already paid", 400);
+    }
+    if (latest.orderStatus === "cancelled" || session?.status !== "open" || !session.url) {
+        throw new AppError("This payment link has expired and the books are back on sale. Please order again", 400);
+    }
+
+    return NextResponse.json({success: true, checkoutUrl: session.url});
+};
+
+export const confirmCheckout = async (req: NextRequest) => {
+    const userId = requireUserId(req);
+    const sessionId = req.nextUrl.searchParams.get("session_id");
+
+    const order = sessionId ? await Order.findOne({stripeSessionId: sessionId, buyer: userId}) : null;
+    if(!order){
+        throw new AppError("Order not found", 404);
+    }
+
+    const {order: latest} = await syncCheckout(order);
+
+    return NextResponse.json({success: true, data: latest});
 };
 
 const overallStatus = (items: IOrderItem[]) => {
