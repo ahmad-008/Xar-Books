@@ -4,12 +4,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import { LoaderCircle, XCircle } from "lucide-react";
+import { CreditCard, LoaderCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookLoader } from "@/lib/BookLoader";
 import { getErrorMessage } from "@/lib/getErrorMessage";
-import { Order, useCancelOrderMutation, useGetMyOrdersQuery } from "@/store/api";
+import { Order, useCancelOrderMutation, useGetMyOrdersQuery, usePayOrderMutation } from "@/store/api";
 import { RootState } from "@/store/store";
 import { toggleLoginDialog } from "@/store/slice/userSlice";
 import NoData from "./NoData";
@@ -25,6 +25,9 @@ const canCancel = (order: Order) =>
     order.orderStatus === "processing" && 
     order.items.every((item) => item.status === "processing" || item.status === "cancelled");
 
+const canPay=  (order: Order) => 
+    order.paymentMethod === "Card" && order.paymentStatus === "pending" && order.orderStatus === "processing";
+
 const paymentLabel = (order: Order) => {
     if (order.paymentStatus === "refunded") return "refunded";
     if (order.orderStatus === "cancelled") return "not charged";
@@ -36,6 +39,7 @@ export default function MyOrdersContent() {
     const user = useSelector((state: RootState) => state.user.user);
     const { data, isLoading, isError } = useGetMyOrdersQuery(undefined, { skip: !user, refetchOnMountOrArgChange: true, });
     const [cancelOrder, { isLoading: isCancelling, originalArgs: cancellingId }] = useCancelOrderMutation();
+    const [payOrder, { isLoading: isPaying, originalArgs: payingId }] = usePayOrderMutation();
 
     if (!user) {
         return (
@@ -85,6 +89,15 @@ export default function MyOrdersContent() {
         }
     };
 
+    const handlePay = async (id: string) => {
+        try {
+            const result =await payOrder(id).unwrap();
+            window.location.href= result.checkoutUrl;
+        } catch(error){
+            toast.error(getErrorMessage(error));
+        }
+    };
+
     return (
         <div className="space-y-6">
             <h1 className="text-2xl font-bold">My orders</h1>
@@ -122,6 +135,25 @@ export default function MyOrdersContent() {
                                 {order.paymentMethod === "COD" ? "Cash on delivery" : "Card"} · {paymentLabel(order)}
                             </Badge>
                             <div className="flex items-center gap-3">
+                                {canPay(order) && (
+                                    <Button
+                                        size="sm"
+                                        onClick={() => handlePay(order._id)}
+                                        disabled={isPaying}
+                                        className="normal-case tracking-normal"
+                                    >
+                                        {isPaying && payingId === order._id ? (
+                                            <LoaderCircle className="mr-1 h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <CreditCard className="mr-1 h-4 w-4" />
+                                        )
+
+                                        }
+                                        Pay now
+                                    </Button>
+                                )
+
+                                }
                                 {canCancel(order) && (
                                     <Button
                                         variant="outline"

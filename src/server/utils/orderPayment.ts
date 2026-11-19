@@ -80,6 +80,25 @@ const refundOrder = async (order: HydratedDocument<IOrder>) => {
     await getStripe().refunds.create({ payment_intent: paymentIntentId }, { idempotencyKey: `refund-${order.id}` });
 };
 
+export const syncCheckout = async (order: HydratedDocument<IOrder>) => {
+    if(order.paymentMethod !== "Card" || order.paymentStatus !== "pending" || !order.stripeSessionId){
+        return {order, session: null};
+    }
+    const session = await getStripe().checkout.sessions.retrieve(order.stripeSessionId);
+
+    if(session.payment_status === "paid"){
+        await Order.updateOne(
+            {_id: order._id, paymentStatus: "pending"},
+            { $set: {paymentStatus: "paid", paymentIntentId: paymentIntentOf(session)}}
+        );
+    } else if (session.status === "expired"){
+        await releaseOrder(order._id);
+    } else {
+        return { order, session };
+    }
+    return {order: (await Order.findById(order._id)) ?? order, session};
+}; 
+
 export const cancelOrderByBuyer = async (orderId: string, buyerId: string) => {
     const order = await Order.findOne({ _id: orderId, buyer: buyerId });
     if (!order) {
