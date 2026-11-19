@@ -96,7 +96,8 @@ export interface OrderItem {
     image: string;
     price: number;
     shippingCharge: number;
-    status: "processing" | "shipped" | "delivered";
+    status: "processing" | "shipped" | "delivered" | "cancelled";
+    
 }
 
 export type PaymentMethod = "COD" | "Card";
@@ -310,6 +311,10 @@ export const api = createApi({
             query: ({ id, status }) => ({ url: `/orders/selling/${id}`, method: "PATCH", body: { status } }),
             invalidatesTags: ["Order"],
         }),
+        rejectSellingOrder: builder.mutation<SellingOrderResponse, string>({
+            query: (id) => ({ url: `/orders/selling/${id}/reject`, method: "POST" }),
+            invalidatesTags: ["Order", "Product"],
+        }),
 
         updateProfile: builder.mutation<AuthResponse,{name?: string; phoneNumber?: string}>({
             query: (body) => ({ url: "/users/me", method: "PATCH", body }),
@@ -362,6 +367,7 @@ export const {
     useCancelOrderMutation,
     useGetSellingOrdersQuery,
     useUpdateSellingStatusMutation,
+    useRejectSellingOrderMutation,
     useUpdateProfileMutation,
     useUpdateAvatarMutation,
     useChangePasswordMutation,

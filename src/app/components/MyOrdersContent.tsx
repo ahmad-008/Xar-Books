@@ -22,7 +22,8 @@ const STATUS_STYLES: Record<Order["orderStatus"], string> = {
 };
 
 const canCancel = (order: Order) =>
-    order.orderStatus === "processing" && order.items.every((item) => item.status === "processing");
+    order.orderStatus === "processing" && 
+    order.items.every((item) => item.status === "processing" || item.status === "cancelled");
 
 const paymentLabel = (order: Order) => {
     if (order.paymentStatus === "refunded") return "refunded";

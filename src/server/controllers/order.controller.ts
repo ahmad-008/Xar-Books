@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Cart } from "../models/Cart";
 import { IOrder, IOrderItem, IShippingAddress, Order } from "../models/Order";
 import { Product } from "../models/Product";
+import { User } from "../models/User";
 import { AppError } from "../utils/AppError";
 import { requireUserId } from "../utils/auth";
 import { Params, appUrl, readJson } from "../utils/http";
@@ -22,6 +23,7 @@ const ADDRESS_FIELDS = [
 type AddressField = (typeof ADDRESS_FIELDS)[number];
 
 const roundMoney = (value: number) => Math.round(value * 100) / 100;
+const   MAX_OPEN_COD_ORDERS = 3;
 
 const readAddress = (input: unknown): IShippingAddress => {
     const source = (typeof input === "object" && input !== null ? input : {}) as Record<string, unknown>;
@@ -51,6 +53,27 @@ export const createOrder = async (req: NextRequest) => {
     }
 
     const address = readAddress(shippingAddress);
+    const buyer = await User.findById(userId);
+    if(!buyer){
+        throw new AppError("Please log in to continue", 401);
+    }
+    if (!buyer.isEmailVerified){
+        throw new AppError("Please verify your email before placing an order",403);
+    }
+
+    if(paymentMethod === "COD"){
+        const openOrders = await Order.countDocuments({
+            buyer: userId,
+            paymentMethod: "COD",
+            orderStatus: {$in: ["processing", "shipped"]},
+        });
+        if(openOrders >= MAX_OPEN_COD_ORDERS) {
+            throw new AppError(
+                `You can have up to ${MAX_OPEN_COD_ORDERS} open cash on delivery orders. Please wait for one to arrive or cancel one first`,
+                400
+            );
+        }
+    }
 
     const order = await mongoose.connection.transaction(async (session) => {
         const cart = await Cart.findOne({ user: userId }).session(session);
@@ -162,10 +185,13 @@ export const cancelOrder = async (req: NextRequest, { id }: Params) => {
 };
 
 const overallStatus = (items: IOrderItem[]) => {
-    if (items.every((item) => item.status === "delivered")) return "delivered";
-    if (items.every((item) => item.status !== "processing")) return "shipped";
+    const active = items.filter((item) => item.status !== "cancelled");
+    if (active.length === 0) return "cancelled";
+    if (active.every((item) => item.status === "delivered")) return "delivered";
+    if (active.every((item) => item.status !== "processing")) return "shipped";
     return "processing";
 };
+
 
 const toSellerView = (order: HydratedDocument<IOrder>, sellerId: string) => ({
     _id: order._id,
@@ -213,7 +239,10 @@ export const updateSellingStatus = async (req: NextRequest, { id }: Params) => {
         throw new AppError("This order hasn't been paid yet", 400);
     }
 
-    const myItems = order.items.filter((item) => item.seller.toString() === userId);
+    const myItems = order.items.filter((item) => item.seller.toString() === userId && item.status !== "cancelled");
+    if(myItems.length === 0){
+        throw new AppError("You rejected this order", 400);
+    }
     const required = status === "shipped" ? "processing" : "shipped";
 
     if (myItems.some((item) => item.status !== required)) {
@@ -235,5 +264,67 @@ export const updateSellingStatus = async (req: NextRequest, { id }: Params) => {
         success: true,
         message: `Marked as ${status}`,
         data: toSellerView(order, userId),
+    });
+};
+
+export const rejectSellingOrder = async (req: NextRequest, {id}: Params) => {
+    const userId = requireUserId(req);
+
+    if(!isValidObjectId(id)){
+        throw new AppError("Order not found", 404);
+    }
+
+    const order = await mongoose.connection.transaction(async (session)=> {
+        const order = await Order.findOne({_id: id, "items.seller": userId}).session(session);
+
+        if(!order){
+            throw new AppError("Order not found", 404);
+        }
+
+        if(order.orderStatus === "cancelled"){
+            throw new AppError("This order was cancelled", 400);
+        }
+
+        if(order.paymentMethod !== "COD"){
+            throw new AppError("Card orders can't be rejected. Please contact support", 400);
+        }
+
+        const myItems = order.items.filter((item)=> item.seller.toString() === userId && item.status !== "cancelled");
+        if (myItems.length === 0){
+            throw new AppError("You already rejected this order",400);
+        }
+        if(myItems.some((item)=> item.status !== "processing")){
+            throw new AppError("Books that have shipped can't be rejected", 400);
+        }
+
+        myItems.forEach((item) =>{
+            item.status = "cancelled";
+        });
+
+        const active = order.items.filter((item)=> item.status !== "cancelled");
+        if(active.length > 0 ){
+            order.itemsTotal = roundMoney(active.reduce((sum, item)=> sum + item.price, 0));
+            order.shippingTotal = roundMoney(active.reduce((sum, item)=> sum + item.shippingCharge, 0));
+            order.totalAmount =roundMoney(order.itemsTotal + order.shippingTotal);
+        }
+        order.orderStatus = overallStatus(order.items);
+        await order.save({session});
+
+        await Product.updateMany(
+            {_id: {$in: myItems.map((item)=> item.product)}},
+            {$set: {isSold: false}},
+            {session}
+        );
+
+        return order;
+
+
+
+    });
+
+    return NextResponse.json({
+        success: true,
+        message: "Order rejected. Your books are back on sale",
+        data: toSellerView(order,userId),
     });
 };

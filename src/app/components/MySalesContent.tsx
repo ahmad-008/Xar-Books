@@ -4,12 +4,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import { LoaderCircle, MapPin, Truck, PackageCheck } from "lucide-react";
+import { LoaderCircle, MapPin, Truck, PackageCheck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookLoader } from "@/lib/BookLoader";
 import { getErrorMessage } from "@/lib/getErrorMessage";
-import { OrderItem, SellingOrder, useGetSellingOrdersQuery, useUpdateSellingStatusMutation } from "@/store/api";
+import { OrderItem, SellingOrder, useGetSellingOrdersQuery, useRejectSellingOrderMutation, useUpdateSellingStatusMutation } from "@/store/api";
 import { RootState } from "@/store/store";
 import { toggleLoginDialog } from "@/store/slice/userSlice";
 import NoData from "./NoData";
@@ -18,12 +18,16 @@ const ITEM_STYLES: Record<OrderItem["status"], string> = {
     processing: "bg-amber-100 text-amber-800",
     shipped: "bg-blue-100 text-blue-800",
     delivered: "bg-green-100 text-green-800",
+    cancelled: "bg-gray-200 text-gray-700",
 };
 
+const activeItems = (order: SellingOrder) => order.items.filter((item)=> item.status !== "cancelled");
+
 const nextAction = (order: SellingOrder) => {
-    if (order.orderStatus === "cancelled") return null;
-    if (order.items.every((item) => item.status === "processing")) return "shipped" as const;
-    if (order.items.every((item) => item.status === "shipped")) return "delivered" as const;
+    const items = activeItems(order);
+    if (order.orderStatus === "cancelled" || items.length === 0) return null;
+    if (items.every((item) => item.status === "processing")) return "shipped" as const;
+    if (items.every((item) => item.status === "shipped")) return "delivered" as const;
     return null;
 };
 
@@ -34,7 +38,9 @@ export default function MySalesContent() {
         skip: !user,
         refetchOnMountOrArgChange: true,
     });
-    const [updateStatus, { isLoading: isUpdating, originalArgs }] = useUpdateSellingStatusMutation();
+
+    const [updateStatus, {isLoading: isUpdating, originalArgs}] = useUpdateSellingStatusMutation();
+    const [rejectOrder, {isLoading: isRejecting, originalArgs: rejectingId}] = useRejectSellingOrderMutation();
 
     if (!user) {
         return (
@@ -83,6 +89,16 @@ export default function MySalesContent() {
         }
     };
 
+    const handleReject = async (id: string) => {
+        if(!window.confirm("Reject this order? Your books will go back on sale.")) return;
+        try{
+            const result = await rejectOrder(id).unwrap();
+            toast.success(result.message ?? "Order rejected");
+
+        } catch (error) {
+            toast.error(getErrorMessage(error));
+        } };
+
     return (
         <div className="space-y-6">
             <h1 className="text-2xl font-bold">My sales</h1>
@@ -91,7 +107,10 @@ export default function MySalesContent() {
                     const action = nextAction(order);
                     const address = order.shippingAddress;
                     const isBusy = isUpdating && originalArgs?.id === order._id;
-                    const myTotal = order.items.reduce((sum, item) => sum + item.price + item.shippingCharge, 0);
+                    const isRejectBusy = isRejecting && rejectingId === order._id;
+                    const isRejected = activeItems(order).length === 0;
+                    const canReject = order.paymentMethod === "COD" && action === "shipped";
+                    const myTotal = activeItems(order).reduce((sum, item) => sum + item.price + item.shippingCharge, 0);
 
                     return (
                         <li key={order._id} className="space-y-4 rounded-lg border bg-white p-4 shadow-sm">
@@ -139,22 +158,42 @@ export default function MySalesContent() {
 
                                 {order.orderStatus === "cancelled" ? (
                                     <Badge variant="secondary">Cancelled</Badge>
+                                ) : isRejected ? (
+                                    <Badge variant="secondary">Rejected</Badge>
                                 ) : action ? (
-                                    <Button
-                                        size="sm"
-                                        onClick={() => handleUpdate(order._id, action)}
-                                        disabled={isUpdating}
-                                        className="normal-case tracking-normal"
-                                    >
-                                        {isBusy ? (
-                                            <LoaderCircle className="mr-1 h-4 w-4 animate-spin" />
-                                        ) : action === "shipped" ? (
-                                            <Truck className="mr-1 h-4 w-4" />
-                                        ) : (
-                                            <PackageCheck className="mr-1 h-4 w-4" />
+                                    <div className="flex gap-2">
+                                        {canReject && (
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => handleReject(order._id)}
+                                                disabled={isUpdating || isRejecting}
+                                                className="normal-case tracking-normal"
+                                            >
+                                                {isRejectBusy ? (
+                                                    <LoaderCircle className="mr-1 h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <X className="mr-1 h-4 w-4" />
+                                                )}
+                                                Reject
+                                            </Button>
                                         )}
-                                        {action === "shipped" ? "Mark as shipped" : "Mark as delivered"}
-                                    </Button>
+                                        <Button
+                                            size="sm"
+                                            onClick={() => handleUpdate(order._id, action)}
+                                            disabled={isUpdating || isRejecting}
+                                            className="normal-case tracking-normal"
+                                        >
+                                            {isBusy ? (
+                                                <LoaderCircle className="mr-1 h-4 w-4 animate-spin" />
+                                            ) : action === "shipped" ? (
+                                                <Truck className="mr-1 h-4 w-4" />
+                                            ) : (
+                                                <PackageCheck className="mr-1 h-4 w-4" />
+                                            )}
+                                            {action === "shipped" ? "Mark as shipped" : "Mark as delivered"}
+                                        </Button>
+                                    </div>
                                 ) : (
                                     <span className="font-medium text-green-700">Delivered</span>
                                 )}

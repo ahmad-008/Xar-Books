@@ -4,7 +4,7 @@ import { Schema, Types, model, Model, models } from "mongoose";
 export const PAYMENT_METHODS = ["COD", "Card"] as const;
 export const PAYMENT_STATUSES = ["pending", "paid", "failed", "refunded"] as const;
 export const ORDER_STATUSES = ["processing", "shipped", "delivered","cancelled"] as const;
-export const ITEM_STATUSES = ["processing", "shipped", "delivered"] as const;
+export const ITEM_STATUSES = ["processing", "shipped", "delivered", "cancelled"] as const;
 
 
 export interface IOrderItem {
