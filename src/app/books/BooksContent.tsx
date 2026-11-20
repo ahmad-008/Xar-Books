@@ -86,7 +86,7 @@ const BooksContent = () => {
     return (
         <div className="min-h-screen bg-gray-50" >
             <div className="container mx-auto px-4 py-8" >
-                <h1 className="mb-8 text-3xl font-bold">Find from over 1000s of used books online</h1>
+                <h1 className="mb-8 text-3xl font-bold">Browse used books</h1>
 
 
                 <div className="grid gap-8 md:grid-cols-[280px_1fr]" >
@@ -217,14 +217,9 @@ const BooksContent = () => {
                                                                 <span>{formatDistanceToNow(new Date(book.createdAt), { addSuffix: true })}</span>
                                                                 <span>{book.condition}</span>
                                                             </div>
-                                                            <Link
-                                                                href={`/books/${book._id}`} className="mt-4"
-                                                            >
-                                                                <Button className="w-full rounded-md bg-linear-to-r from-orange-500 to-orange-600 normal-case tracking-normal text-white hover:from-orange-600 hover:to-orange-700" >
-                                                                    View Details
-                                                                </Button>
-
-                                                            </Link>
+                                                            <Button asChild className="mt-4 w-full rounded-md bg-linear-to-r from-orange-500 to-orange-600 normal-case tracking-normal text-white hover:from-orange-600 hover:to-orange-700" >
+                                                                <Link href={`/books/${book._id}`}>View Details</Link>
+                                                            </Button>
 
 
                                                         </div>

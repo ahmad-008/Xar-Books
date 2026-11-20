@@ -94,9 +94,9 @@ function NewBooks() {
                                                                         </div>
                                                                     </div>
                                                                     <div className='mt-auto flex justify-end pt-4' >
-                                                                        <Button className="normal-case tracking-normal rounded-md bg-linear-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700" >
-                                                                            Buy Now
-                                                                        </Button>
+                                                                        <span className="rounded-md bg-linear-to-r from-orange-500 to-orange-600 px-4 py-2 text-sm font-medium text-white hover:from-orange-600 hover:to-orange-700" >
+                                                                            View details
+                                                                        </span>
                                                                     </div>
                                                                 </div>
 
