@@ -16,10 +16,10 @@ const sendCart = async (userId: string, message?: string) => {
     return NextResponse.json({ success: true, message, data: cart?.items ?? [] });
 };
 
-export const getCart = async (req: NextRequest) => sendCart(requireUserId(req));
+export const getCart = async (req: NextRequest) => sendCart(await requireUserId(req));
 
 export const addToCart = async (req: NextRequest) => {
-    const userId = requireUserId(req);
+    const userId = await requireUserId(req);
     const { productId } = await readJson(req);
 
     if (typeof productId !== "string" || !isValidObjectId(productId)) {
@@ -45,7 +45,7 @@ export const addToCart = async (req: NextRequest) => {
 };
 
 export const removeFromCart = async (req: NextRequest, { productId }: Params) => {
-    const userId = requireUserId(req);
+    const userId = await requireUserId(req);
 
     if (!isValidObjectId(productId)) {
         throw new AppError("Book not found", 404);
@@ -57,7 +57,7 @@ export const removeFromCart = async (req: NextRequest, { productId }: Params) =>
 };
 
 export const clearCart = async (req: NextRequest) => {
-    const userId = requireUserId(req);
+    const userId = await requireUserId(req);
 
     await Cart.updateOne({ user: userId }, { $set: { items: [] } });
 
