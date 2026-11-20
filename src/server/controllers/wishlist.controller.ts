@@ -16,10 +16,10 @@ const sendWishlist = async (userId: string, message?: string) => {
     return NextResponse.json({ success: true, message, data: wishlist?.items ?? [] });
 };
 
-export const getWishlist = async (req: NextRequest) => sendWishlist(requireUserId(req));
+export const getWishlist = async (req: NextRequest) => sendWishlist(await requireUserId(req));
 
 export const addToWishlist = async (req: NextRequest) => {
-    const userId = requireUserId(req);
+    const userId = await requireUserId(req);
     const { productId } = await readJson(req);
 
     if (typeof productId !== "string" || !isValidObjectId(productId)) {
@@ -45,7 +45,7 @@ export const addToWishlist = async (req: NextRequest) => {
 };
 
 export const removeFromWishlist = async (req: NextRequest, { productId }: Params) => {
-    const userId = requireUserId(req);
+    const userId = await requireUserId(req);
 
     if (!isValidObjectId(productId)) {
         throw new AppError("Book not found", 404);

@@ -13,7 +13,7 @@ const toNumber = (value: unknown) =>
 const text = (value: FormDataEntryValue | null) => (typeof value === "string" ? value : undefined);
 
 export const createProduct = async (req: NextRequest) => {
-    const user = await User.findById(requireUserId(req));
+    const user = await User.findById(await requireUserId(req));
     if (!user) {
         throw new AppError("Please log in to continue", 401);
     }
@@ -130,13 +130,13 @@ export const getProductById = async (_req: NextRequest, { id }: Params) => {
 };
 
 export const getMyProducts = async (req: NextRequest) => {
-    const products = await Product.find({ seller: requireUserId(req) }).sort({ createdAt: -1 });
+    const products = await Product.find({ seller: await requireUserId(req) }).sort({ createdAt: -1 });
 
     return NextResponse.json({ success: true, data: products });
 };
 
 export const deleteProduct = async (req: NextRequest, { id }: Params) => {
-    const userId = requireUserId(req);
+    const userId = await requireUserId(req);
 
     if (!isValidObjectId(id)) {
         throw new AppError("Book not found", 404);
@@ -166,7 +166,7 @@ const OPTIONAL_FIELDS =["author","edition", "description"];
 const NUMBER_FIELDS = ["price", "finalPrice","shippingCharge"] as const;
 
 export const updateProduct = async (req: NextRequest, { id }: Params) => {
-    const userId = requireUserId(req);
+    const userId = await requireUserId(req);
 
     if (!isValidObjectId(id)) {
         throw new AppError("Book not found", 404);
@@ -226,7 +226,7 @@ const deleteImages = async (urls: string[]) => {
 };
 
 export const updateProductImages = async (req: NextRequest, { id }: Params) => {
-    const userId = requireUserId(req);
+    const userId = await requireUserId(req);
 
     if(!isValidObjectId(id)){
         throw new AppError("Book not found", 404);

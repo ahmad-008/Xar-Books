@@ -13,7 +13,7 @@ import { deleteImage, readImages, uploadImage } from "../utils/uploadImage";
 const PHONE_PATTERN = /^[0-9+\-\s()]{7,20}$/;
 
 const findUser = async (req: NextRequest) => {
-    const user = await User.findById(requireUserId(req));
+    const user = await User.findById(await requireUserId(req));
 
     if(!user){
         throw new AppError("Please log in to continue", 401);
@@ -85,7 +85,7 @@ export const updateAvatar = async (req: NextRequest) => {
 };
 
 export const changePassword = async(req: NextRequest) => {
-    const userId = requireUserId(req);
+    const userId = await requireUserId(req);
     const {currentPassword, newPassword} = await readJson(req);
 
     if (typeof currentPassword !== "string" || typeof newPassword !== "string"){
@@ -110,9 +110,15 @@ export const changePassword = async(req: NextRequest) => {
     user.password = newPassword;
     await  user.save();
 
+    const updated = await User.findByIdAndUpdate(
+        userId,
+        {$inc: {tokenVersion: 1}},
+        {returnDocument: "after"}
+    ).select("+tokenVersion");
+
     const res = NextResponse.json({
         success: true, message: "Password changed"
     });
-    setAuthCookie(res,userId);
+    setAuthCookie(res,userId, updated?.tokenVersion ?? 0);
     return res;
 };

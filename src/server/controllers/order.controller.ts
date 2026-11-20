@@ -45,7 +45,7 @@ const readAddress = (input: unknown): IShippingAddress => {
 };
 
 export const createOrder = async (req: NextRequest) => {
-    const userId = requireUserId(req);
+    const userId = await requireUserId(req);
     const { paymentMethod, shippingAddress } = await readJson(req);
 
     if (paymentMethod !== "COD" && paymentMethod !== "Card") {
@@ -149,13 +149,13 @@ export const createOrder = async (req: NextRequest) => {
 };
 
 export const getMyOrders = async (req: NextRequest) => {
-    const orders = await Order.find({ buyer: requireUserId(req) }).sort({ createdAt: -1 });
+    const orders = await Order.find({ buyer: await requireUserId(req) }).sort({ createdAt: -1 });
 
     return NextResponse.json({ success: true, data: orders });
 };
 
 export const getOrderById = async (req: NextRequest, { id }: Params) => {
-    const userId = requireUserId(req);
+    const userId = await requireUserId(req);
 
     if (!isValidObjectId(id)) {
         throw new AppError("Order not found", 404);
@@ -170,7 +170,7 @@ export const getOrderById = async (req: NextRequest, { id }: Params) => {
 };
 
 export const cancelOrder = async (req: NextRequest, { id }: Params) => {
-    const userId = requireUserId(req);
+    const userId = await requireUserId(req);
 
     if (!isValidObjectId(id)) {
         throw new AppError("Order not found", 404);
@@ -185,7 +185,7 @@ export const cancelOrder = async (req: NextRequest, { id }: Params) => {
 };
 
 export const payOrder= async (req: NextRequest, {id}: Params)=> {
-    const userId= requireUserId(req);
+    const userId= await requireUserId(req);
 
     if(!isValidObjectId(id)){
         throw new AppError("Order not found", 404);
@@ -216,7 +216,7 @@ export const payOrder= async (req: NextRequest, {id}: Params)=> {
 };
 
 export const confirmCheckout = async (req: NextRequest) => {
-    const userId = requireUserId(req);
+    const userId = await requireUserId(req);
     const sessionId = req.nextUrl.searchParams.get("session_id");
 
     const order = sessionId ? await Order.findOne({stripeSessionId: sessionId, buyer: userId}) : null;
@@ -249,7 +249,7 @@ const toSellerView = (order: HydratedDocument<IOrder>, sellerId: string) => ({
 });
 
 export const getSellingOrders = async (req: NextRequest) => {
-    const userId = requireUserId(req);
+    const userId = await requireUserId(req);
 
     const orders = await Order.find({
         "items.seller": userId,
@@ -260,7 +260,7 @@ export const getSellingOrders = async (req: NextRequest) => {
 };
 
 export const updateSellingStatus = async (req: NextRequest, { id }: Params) => {
-    const userId = requireUserId(req);
+    const userId = await requireUserId(req);
     const { status } = await readJson(req);
 
     if (status !== "shipped" && status !== "delivered") {
@@ -313,7 +313,7 @@ export const updateSellingStatus = async (req: NextRequest, { id }: Params) => {
 };
 
 export const rejectSellingOrder = async (req: NextRequest, {id}: Params) => {
-    const userId = requireUserId(req);
+    const userId = await requireUserId(req);
 
     if(!isValidObjectId(id)){
         throw new AppError("Order not found", 404);

@@ -14,6 +14,7 @@ export interface IUser {
     emailVerificationExpires?: Date;
     passwordResetToken?: string;
     passwordResetExpires?: Date;
+    tokenVersion: number;
 }
 
 const userSchema = new Schema<IUser>(
@@ -53,6 +54,7 @@ const userSchema = new Schema<IUser>(
         emailVerificationExpires: { type: Date, select: false },
         passwordResetToken: { type: String, select: false },
         passwordResetExpires: { type: Date, select: false },
+        tokenVersion: {type: Number,default: 0, select: false},
     },
     {timestamps: true}
 );

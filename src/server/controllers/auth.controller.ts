@@ -74,7 +74,7 @@ export const login = async (req: NextRequest) => {
     const limitKey = `login:${clientIp(req)}:${email.trim().toLowerCase()}`;
     await rateLimit(limitKey, 5, 15);
 
-    const user = await User.findOne({ email: email.trim().toLowerCase() }).select("+password");
+    const user = await User.findOne({ email: email.trim().toLowerCase() }).select("+password +tokenVersion");
     const isPasswordCorrect = user ? await bcrypt.compare(password, user.password) : false;
 
     if (!user || !isPasswordCorrect) {
@@ -83,7 +83,7 @@ export const login = async (req: NextRequest) => {
     
     await clearRateLimit(limitKey);
     const res = NextResponse.json({ success: true, message: "Logged In", data: toPublicUser(user) });
-    setAuthCookie(res, user._id.toString());
+    setAuthCookie(res, user._id.toString(), user.tokenVersion);
     return res;
 };
 
@@ -94,7 +94,7 @@ export const logout = async () => {
 };
 
 export const getMe = async (req: NextRequest) => {
-    const user = await User.findById(requireUserId(req));
+    const user = await User.findById(await requireUserId(req));
 
     if (!user) {
         throw new AppError("Please log in to continue", 401);
@@ -166,6 +166,9 @@ export const resetPassword = async (req: NextRequest) => {
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     await user.save();
+    await User.updateOne({_id: user._id}, {$inc: {tokenVersion: 1}});
+
+
 
     const res = NextResponse.json({ success: true, message: "Password updated, please log in" });
     clearAuthCookie(res);
@@ -198,7 +201,7 @@ export const verifyEmail = async (req: NextRequest) => {
 };
 
 export const resendVerification = async (req: NextRequest) => {
-    const user = await User.findById(requireUserId(req));
+    const user = await User.findById(await requireUserId(req));
 
     if (!user) {
         throw new AppError("Please log in to continue", 401);
