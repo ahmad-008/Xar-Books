@@ -92,7 +92,7 @@ export default function MyOrdersContent() {
     const handlePay = async (id: string) => {
         try {
             const result =await payOrder(id).unwrap();
-            window.location.href= result.checkoutUrl;
+            window.location.assign(result.checkoutUrl);
         } catch(error){
             toast.error(getErrorMessage(error));
         }

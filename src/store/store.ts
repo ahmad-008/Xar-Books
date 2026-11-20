@@ -18,7 +18,7 @@ const createNoopStorage = () => ({
 const storage = typeof window !== "undefined" ? createWebStorage("local") : createNoopStorage();
 
 //Persist Configuration for User
-const userPersistantConfig = {key:'user', storage, whitelist: ['user','isEmailVerified', 'isLoggedIn']}
+const userPersistantConfig = {key:'user', storage, whitelist: ['user', 'isLoggedIn']}
 
 //wrap users with 'Persist Config'
 

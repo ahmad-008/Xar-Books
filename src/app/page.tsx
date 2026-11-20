@@ -106,15 +106,17 @@ export default function Home() {
         {bannerImages.map((image, index) => (
           <div
             key={index}
-            className={`absolute inset-0 transition-opacity duration-100 ${currentImage === index ? 'opacity-100' : 'opacity-0'} `}
+            className={`absolute inset-0 transition-opacity duration-700 ${currentImage === index ? 'opacity-100' : 'opacity-0'} `}
           >
 
             <Image
               src={image}
               alt='banner'
               fill
+              sizes="100vw"
               className="object-cover"
-              loading="eager"
+              loading={index === 0 ? "eager" : "lazy"}
+              fetchPriority={index === 0 ? "high" : "auto"}
             />
             <div className="absolute inset-0 bg-black/50" />
 
