@@ -152,7 +152,7 @@ export default function MySalesContent() {
 
                             <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-sm">
                                 <span>
-                                    You earn <strong>${myTotal.toFixed(2)}</strong>
+                                    Sale total <strong>${myTotal.toFixed(2)}</strong>
                                     <span className="text-muted-foreground"> (incl. shipping)</span>
                                 </span>
 

@@ -21,25 +21,28 @@ export default function Home() {
     {
       imageSrc:
         "https://images.unsplash.com/photo-1604866830893-c13cafa515d5?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8b25saW5lJTIwc2VsbCUyMGJvb2tzfGVufDB8fDB8fHww",
-      title: "Where and how to sell old books online?",
+      href: "/blogs/how-to-price-used-books",
+      title: "How to price your used books so they sell",
       description:
-        "Get started with selling your used books online and earn money from your old books.",
+        "Set a fair price for your old books and sell them faster.",
       icon: <BookOpen className="w-6 h-6 text-primary" />,
     },
     {
       imageSrc:
         "https://media.istockphoto.com/id/910384920/photo/kid-reading-near-locked-door.webp?a=1&b=1&s=612x612&w=0&k=20&c=J3FL4ZVORItw_bkLzlVo4WO-xUy22S7Qqbuq2xusNnc=",
-      title: "What to do with old books?",
+      href: "/blogs/grading-book-condition",
+      title: "Excellent, Good or Fair?",
       description:
-        "Learn about different ways to make use of your old books and get value from them.",
+        "Learn how to grade your book's condition honestly so buyers trust you.",
       icon: <Library className="w-6 h-6 text-primary" />,
     },
     {
       imageSrc:
         "https://images.unsplash.com/photo-1492539438225-2666b2a98f93?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fG9sZCUyMCUyMGJvb2tzfGVufDB8fDB8fHww",
-      title: "What is BookKart?",
+      href: "/blogs/why-buy-used-textbooks",
+      title: "Why buy used textbooks?",
       description:
-        "Discover how BookKart helps you buy and sell used books online easily.",
+        "Five reasons buying used saves you money and is better for the planet.",
       icon: <Store className="w-6 h-6 text-primary" />,
     },
   ];
@@ -49,7 +52,7 @@ export default function Home() {
       step: "Step 1",
       title: "Post an ad for selling used books",
       description:
-        "Post an ad on BookKart describing your book details to sell your old books online.",
+        "Post an ad on Xar Books describing your book details to sell your old books online.",
       icon: <Camera className="h-8 w-8 text-primary" />,
     },
     {
@@ -60,9 +63,9 @@ export default function Home() {
     },
     {
       step: "Step 3",
-      title: "Get paid into your Bank account",
+      title: "Ship the book and get paid",
       description:
-        "You will get money into your account once you receive an order for your book.",
+        "With cash on delivery, the buyer pays when the book arrives. For card orders, contact us about your payout.",
       icon: <Wallet className="h-8 w-8 text-primary" />,
     },
   ];
@@ -71,14 +74,14 @@ export default function Home() {
     {
       step: "Step 1",
       title: "Select the used books you want",
-      description: "Search from over thousands of used books listed on BookKart.",
+      description: "Search the used books listed on Xar Books.",
       icon: <Search className="h-8 w-8 text-primary" />,
     },
     {
       step: "Step 2",
       title: "Place the order by making payment",
       description:
-        "Then simply place the order by clicking on the 'Buy Now' button.",
+        "Add books to your cart and check out by card or cash on delivery.",
       icon: <CreditCard className="h-8 w-8 text-primary" />,
     },
     {
@@ -263,15 +266,17 @@ export default function Home() {
                           />
                       </div>
                       <div className="p-6 flex-col flex grow" >
-                        <h3 className="tex-xl font-smeibold mb-2 flex items-center gap-2" >
+                        <h3 className="text-xl font-semibold mb-2 flex items-center gap-2" >
                             <div className="bg-primary/10 p-2 rounded-full" >
                                 {post.icon}
                             </div>
                             <span className="grow" >{post.title}</span>
                         </h3>
                         <p className="text-gray-600 text-sm grow" >{post.description}</p>
-                        <Button variant='link' className="mt-4 p-0 items-center text-primary" >
-                          Read More <ArrowRight className="w-4 h-4" />
+                        <Button asChild variant='link' className="mt-4 p-0 items-center justify-start text-primary" >
+                          <Link href={post.href}>
+                            Read More <ArrowRight className="w-4 h-4" />
+                          </Link>
                         </Button>
                       
                       </div>

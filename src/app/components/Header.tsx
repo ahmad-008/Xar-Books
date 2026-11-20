@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { logout  , toggleLoginDialog } from '@/store/slice/userSlice';
 import { RootState } from '@/store/store';
-import { BookLock, ChevronRight, FileTerminal, Heart, HelpCircle, Lock, LogOut, Menu, Package, PiggyBank, Receipt, Search, ShoppingCart, User, User2 } from 'lucide-react';
+import { BookLock, ChevronRight, FileTerminal, Heart, HelpCircle, Lock, LogOut, Menu, Package, PiggyBank, Receipt, Search, ShoppingCart, Store, User, User2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -128,6 +128,11 @@ const Header = () => {
       }
     ]
     ),
+    {
+      icon: <Store className='h-5 w-5 ' />,
+      label: "Sell Books",
+      href: '/book-sell',
+    },
     {
       icon: <User className='h-5 w-5 ' />,
       label: "My Profile",
@@ -273,11 +278,9 @@ const Header = () => {
         </div>
 
         <div className='flex items-center gap-4'>
-          <Link href='/book-sell' >
-            <Button variant='secondary' className='normal-case tracking-normal bg-red-400 text-white hover:bg-red-500 rounded' >
-              Sell Books
-            </Button>
-          </Link>
+          <Button asChild variant='secondary' className='normal-case tracking-normal bg-red-400 text-white hover:bg-red-500 rounded' >
+            <Link href='/book-sell'>Sell Books</Link>
+          </Button>
 
           <DropdownMenu open={isDropDownOpen} onOpenChange={setIsDropDownOpen}>
             <DropdownMenuTrigger asChild>
@@ -301,17 +304,15 @@ const Header = () => {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Link href='/checkout/cart' >
-            <div className='relative' >
-              <Button variant='ghost' className='relative normal-case tracking-normal'>
-                <ShoppingCart className='h-5 w-5 mr-2' />
-                Cart
-              </Button>
+          <Button asChild variant='ghost' className='relative normal-case tracking-normal'>
+            <Link href='/checkout/cart'>
+              <ShoppingCart className='h-5 w-5 mr-2' />
+              Cart
               {cartCount > 0 && (
                 <span className='absolute top-2 left-7 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full px-1 text-xs' >{cartCount}</span>
               )}
-            </div>
-          </Link>
+            </Link>
+          </Button>
 
 
 
@@ -394,16 +395,14 @@ const Header = () => {
         </div>
 
 
-        <Link href='/checkout/cart' >
-          <div className='relative' >
-            <Button variant='ghost' className='relative normal-case tracking-normal'>
-              <ShoppingCart className='h-5 w-5 mr-2' />
-            </Button>
+        <Button asChild variant='ghost' className='relative normal-case tracking-normal'>
+          <Link href='/checkout/cart' aria-label='Cart'>
+            <ShoppingCart className='h-5 w-5 mr-2' />
             {cartCount > 0 && (
               <span className='absolute top-2 left-7 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full px-1 text-xs' >{cartCount}</span>
             )}
-          </div>
-        </Link>
+          </Link>
+        </Button>
 
       </div>
 

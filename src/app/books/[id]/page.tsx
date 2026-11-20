@@ -285,7 +285,6 @@ const BookDetailsPage = () => {
                                 </div>
                                 <div>
                                     <p className="font-medium">{typeof book.seller === "object" ? book.seller.name : "Seller"}</p>
-                                    <Badge variant="secondary" className="mt-1">Verified Seller</Badge>
                                 </div>
                             </div>
                         </CardContent>
