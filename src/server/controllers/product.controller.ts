@@ -5,6 +5,7 @@ import { User } from "../models/User";
 import { AppError } from "../utils/AppError";
 import { requireUserId } from "../utils/auth";
 import { Params, readJson } from "../utils/http";
+import { checkPrices } from "../utils/validate";
 import { MAX_FILES, checkImage, deleteImage, readImages, uploadImage } from "../utils/uploadImage";
 
 const toNumber = (value: unknown) =>
@@ -12,17 +13,6 @@ const toNumber = (value: unknown) =>
 
 const text = (value: FormDataEntryValue | null) => (typeof value === "string" ? value : undefined);
 
-const checkPrices = (price: number, finalPrice: number, shippingCharge: number) => {
-    if(price < 0.5 || price > 10000 || finalPrice < 0.5 || finalPrice > 10000){
-        throw new AppError("Prices must be between $0.50 and $10,000",400);
-    }
-    if (shippingCharge < 0 || shippingCharge > 100) {
-        throw new AppError("Shipping must be between $0 and $100", 400);
-    }
-    if (finalPrice > price) {
-        throw new AppError("Selling price can't be higher than the original price", 400);
-    }
-};
 
 export const createProduct = async (req: NextRequest) => {
     const user = await User.findById(await requireUserId(req));

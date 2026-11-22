@@ -40,3 +40,16 @@ export const checkPassword = (password: string) => {
     }
 
 };    
+
+
+export const checkPrices = (price: number, finalPrice: number, shippingCharge: number) => {
+    if (price < 0.5 || price > 10000 || finalPrice < 0.5 || finalPrice > 10000) {
+        throw new AppError("Prices must be between $0.50 and $10,000", 400);
+    }
+    if (shippingCharge < 0 || shippingCharge > 100) {
+        throw new AppError("Shipping must be between $0 and $100", 400);
+    }
+    if (finalPrice > price) {
+        throw new AppError("Selling price can't be higher than the original price", 400);
+    }
+};
