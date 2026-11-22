@@ -42,7 +42,12 @@ export const store = configureStore({
 //Setup the listnere for the RTK query
 setupListeners(store.dispatch);
 
-export const persistor = persistStore(store);
+let persistStarted = false;
+export const startPersist = () => {
+    if (persistStarted) return;
+    persistStarted = true;
+    persistStore(store);
+}
 
 
 //infer the Root State and AppDispatch types from the store itself
