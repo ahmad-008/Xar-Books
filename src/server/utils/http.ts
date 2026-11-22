@@ -18,8 +18,9 @@ const toErrorResponse = (error: unknown) => {
     }
 
     if (error instanceof mongoose.Error.ValidationError) {
-        const firstError = Object.values(error.errors)[0];
-        return fail(400, firstError?.message ?? "Invalid data");
+        const message = Object.values(error.errors)[0]?.message;
+        const isRaw = !message || /path [`"]/i.test(message);
+        return fail(400, isRaw ? "Some of the details are invalid, please check and try again" : message) ;
     }
 
     const mongoError = error as {code?: unknown; keyPattern?: Record<string, unknown>} | null;

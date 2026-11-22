@@ -321,7 +321,8 @@ export default function SellBookForm({ product }: { product?: Product }) {
                             step="0.01"
                             {...register("price", {
                                 required: "Enter the original price",
-                                validate: (value) => Number(value) > 0 || "Enter a price above 0",
+                                validate: (value) =>
+                                    (Number(value) >= 0.5 && Number(value) <= 10000) || "Enter a price between $0.50 and $10,000",
                             })}
                         />
                         <ErrorText message={errors.price?.message} />
@@ -335,8 +336,11 @@ export default function SellBookForm({ product }: { product?: Product }) {
                             step="0.01"
                             {...register("finalPrice", {
                                 required: "Enter your selling price",
-                                validate: (value, form) =>
-                                    Number(value) <= Number(form.price) || "Can't be higher than the original price",
+                                validate: (value, form) => {
+                                    const amount = Number(value);
+                                    if (amount < 0.5 || amount > 10000) return "Enter a price between $0.50 and $10,000";
+                                    return amount <= Number(form.price) || "Can't be higher than the original price";
+                                },
                             })}
                         />
                         <ErrorText message={errors.finalPrice?.message} />
@@ -350,7 +354,8 @@ export default function SellBookForm({ product }: { product?: Product }) {
                             step="0.01"
                             placeholder="0 = free"
                             {...register("shippingCharge", {
-                                validate: (value) => value === "" || Number(value) >= 0 || "Can't be negative",
+                                validate: (value) => 
+                                    value === "" || Number(value) >= 0 && Number(value) <= 100 || "Shipping must be between $0 and $100",
                             })}
                         />
                         <ErrorText message={errors.shippingCharge?.message} />
