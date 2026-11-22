@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { filters } from "@/lib/Constant";
 import { ProductFilters, useGetProductsQuery } from "@/store/api";
 import { BookLoader } from "@/lib/BookLoader";
@@ -28,45 +27,53 @@ const filterGroups: { key: FilterKey; label: string }[] = [
     { key: "category", label: "Category" },
 ];
 
+const SORT_OPTIONS = ["newest", "price-asc", "price-desc"];
+
 const BooksContent = () => {
+    const router = useRouter();
+    const pathname = usePathname();
     const searchParams = useSearchParams();
     const searchTerm = (searchParams.get("search") || "").trim().toLowerCase();
-    const categoryParam = searchParams.get("category") || "";
-    const categoryFromUrl = filters.category.includes(categoryParam) ? [categoryParam] : [];
-    
+    const sortParam = searchParams.get("sort") || "";
+    const sortOption = SORT_OPTIONS.includes(sortParam) ? sortParam : "newest";
+    const currentPage = Math.max(1, Math.floor(Number(searchParams.get("page")) || 1));
 
-    const [currentPage, setCurrentPage] = useState(1);
-    const [sortOption, setSortOption] = useState("newest");
-    const [selectedFilters, setSelectedFilters] = useState<Record<FilterKey, string[]>>({
-        condition: [],
-        classType: [],
-        category: categoryFromUrl,
-    });
+    const selectedFilters = Object.fromEntries(
+        filterGroups.map(({ key }) => [key, searchParams.getAll(key).filter((value) => filters[key].includes(value))])
+    ) as Record<FilterKey, string[]>;
 
-    // a new search should always start from the first page
-    const [lastSearchTerm, setLastSearchTerm] = useState(searchTerm);
-    if (lastSearchTerm !== searchTerm) {
-        setLastSearchTerm(searchTerm);
-        setCurrentPage(1);
-    }
-
-    // a category link in the navigation bar replaces the category filter
-    const [lastCategoryParam, setLastCategoryParam] = useState(categoryParam);
-    if (lastCategoryParam !== categoryParam) {
-        setLastCategoryParam(categoryParam);
-        setSelectedFilters((prev) => ({ ...prev, category: categoryFromUrl }));
-        setCurrentPage(1);
-    }
+    const updateUrl = (change: (params: URLSearchParams) => void) => {
+        const params = new URLSearchParams(searchParams.toString());
+        change(params);
+        const query = params.toString();
+        router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    };
 
     const toggleFilter = (key: FilterKey, value: string) => {
-        setSelectedFilters((prev) => ({
-            ...prev,
-            [key]: prev[key].includes(value)
-                ? prev[key].filter((v) => v !== value)
-                : [...prev[key], value],
-        }));
-        setCurrentPage(1);
-    }
+        updateUrl((params) => {
+            const values = params.getAll(key);
+            params.delete(key);
+            const next = values.includes(value) ? values.filter((v) => v !== value) : [...values, value];
+            next.forEach((v) => params.append(key, v));
+            params.delete("page");
+        });
+    };
+
+    const setSort = (value: string) => {
+        updateUrl((params) => {
+            if (value === "newest") params.delete("sort");
+            else params.set("sort", value);
+            params.delete("page");
+        });
+    };
+
+    const setPage = (page: number) => {
+        updateUrl((params) => {
+            if (page <= 1) params.delete("page");
+            else params.set("page", String(page));
+        });
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
 
     const { data, isLoading, isFetching, isError } = useGetProductsQuery({
         search: searchTerm || undefined,
@@ -92,7 +99,7 @@ const BooksContent = () => {
                 <div className="grid gap-8 md:grid-cols-[280px_1fr]" >
                     {/* Filters sidebar */}
                     <aside className="space-y-4" >
-                        <Accordion type="multiple" className="rounded-xl bg-white p-4 shadow-sm" >
+                        <Accordion type="multiple" defaultValue={filterGroups.filter(({key})=> selectedFilters[key].length> 0).map(({key}) => key)}  className="rounded-xl bg-white p-4 shadow-sm" >
                             {filterGroups.map(({ key, label }) => (
                                 <AccordionItem key={key} value={key}>
                                     <AccordionTrigger className="normal-case">{label}</AccordionTrigger>
@@ -140,7 +147,7 @@ const BooksContent = () => {
                                 )}
                             </div>
 
-                            <Select value={sortOption} onValueChange={setSortOption} >
+                            <Select value={sortOption} onValueChange={setSort} >
                                 <SelectTrigger className="w-48" >
                                     <SelectValue placeholder="Sort by" />
                                 </SelectTrigger>
@@ -244,7 +251,7 @@ const BooksContent = () => {
                                 <Pagination
                                     currentPage={currentPage}
                                     totalPages={totalPages}
-                                    onPageChange={setCurrentPage}
+                                    onPageChange={setPage}
                                 />
 
 
