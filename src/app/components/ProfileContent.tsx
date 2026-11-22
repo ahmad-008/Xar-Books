@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { getErrorMessage } from "@/lib/getErrorMessage";
 import { useChangePasswordMutation, useUpdateAvatarMutation, useUpdateProfileMutation } from "@/store/api";
 import { RootState } from "@/store/store";
-import { setUser, toggleLoginDialog } from "@/store/slice/userSlice";
+import { setUser, setLoginDialogOpen } from "@/store/slice/userSlice";
 
 const MAX_AVATAR_SIZE = 1024 * 1024;
 
@@ -35,7 +35,7 @@ export default function ProfileContent() {
             <div className="space-y-4 rounded-lg border bg-white p-8 text-center shadow-sm">
                 <h1 className="text-2xl font-bold">My profile</h1>
                 <p className="text-gray-600">Log in to see and edit your profile.</p>
-                <Button onClick={() => dispatch(toggleLoginDialog())} className="normal-case tracking-normal">
+                <Button onClick={() => dispatch(setLoginDialogOpen(true))} className="normal-case tracking-normal">
                     Log in / Sign up
                 </Button>
             </div>

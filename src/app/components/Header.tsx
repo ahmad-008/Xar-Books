@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { logout  , toggleLoginDialog } from '@/store/slice/userSlice';
+import { logout  , setLoginDialogOpen } from '@/store/slice/userSlice';
 import { RootState } from '@/store/store';
 import { BookLock, ChevronRight, FileTerminal, Heart, HelpCircle, Lock, LogOut, Menu, Package, PiggyBank, Receipt, Search, ShoppingCart, Store, User, User2 } from 'lucide-react';
 import Image from 'next/image';
@@ -60,7 +60,7 @@ const Header = () => {
 
 
   const handleLoginCLick = () => {
-    dispatch(toggleLoginDialog())
+    dispatch(setLoginDialogOpen(true))
     setIsDropDownOpen(false)
   }
 
@@ -71,7 +71,7 @@ const Header = () => {
       setIsDropDownOpen(false)
 
     } else {
-      dispatch(toggleLoginDialog())
+      dispatch(setLoginDialogOpen(true))
       setIsDropDownOpen(false)
 
 
@@ -410,7 +410,7 @@ const Header = () => {
 
       <AuthPage
         isLoginOpen={isLoginDialogOpen}
-        setIsLoginOpen={() => dispatch(toggleLoginDialog())}
+        setIsLoginOpen={(open) => dispatch(setLoginDialogOpen(open))}
       />
 
     </header>

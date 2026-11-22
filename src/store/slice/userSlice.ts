@@ -24,8 +24,8 @@ const userSlice = createSlice ({
             state.user = null;
             state.isLoggedIn = false;
         },
-        toggleLoginDialog:(state)=>{
-            state.isLoginDialogOpen = !state.isLoginDialogOpen;
+        setLoginDialogOpen: (state, action:PayloadAction<boolean>)=>{
+            state.isLoginDialogOpen = action.payload;
         },
         authStatus : (state)=>{
             state.isLoggedIn = true;
@@ -33,5 +33,5 @@ const userSlice = createSlice ({
     }
 });
 
-export const {setUser, logout, toggleLoginDialog, authStatus} = userSlice.actions;
+export const {setUser, logout, setLoginDialogOpen, authStatus} = userSlice.actions;
 export default userSlice.reducer;
