@@ -91,11 +91,6 @@ export const getProducts = async (req: NextRequest) => {
     const query = req.nextUrl.searchParams;
     const filter: Record<string, unknown> = { isSold: false };
 
-    const search = query.get("search");
-    if (search && search.trim()) {
-        const regex = new RegExp(escapeRegex(search.trim().slice(0, 100)), "i");
-        filter.$or = [{ title: regex }, { author: regex }, { subject: regex }];
-    }
 
     const categories = toList(query.getAll("category"));
     if (categories.length) filter.category = { $in: categories };
@@ -105,6 +100,16 @@ export const getProducts = async (req: NextRequest) => {
 
     const classTypes = toList(query.getAll("classType"));
     if (classTypes.length) filter.classType = { $in: classTypes };
+
+    const search = (query.get("search") ?? "").trim().slice(0,100);
+    if (search) {
+        filter.$text = {$search: search};
+        if(!(await Product.exists(filter))){
+            delete filter.$text;
+            const regex = new RegExp(escapeRegex(search), "i");
+            filter.$or = [{title: regex}, {author: regex}, {subject: regex}];
+        }
+    }
 
     const sort = query.get("sort");
     const sortBy: Record<string, SortOrder> =
