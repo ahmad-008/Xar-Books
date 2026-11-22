@@ -94,6 +94,7 @@ export default function Home() {
 
   const [currentImage, setCurrentImage] = useState(0)
   useEffect(() => {
+    if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
     const timer = setInterval(() => {
       setCurrentImage((prev) => (prev + 1) % bannerImages.length)
     }, 5000)

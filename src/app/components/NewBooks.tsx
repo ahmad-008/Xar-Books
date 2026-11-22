@@ -9,6 +9,9 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 
+
+const AUTO_ADVANCE_QUERY = "(min-width: 768px) and (prefers-reduced-motion: no-preference)";
+
 function NewBooks() {
 
     const [currentBookSlide, setCurrentBookSlide] = useState(0);
@@ -17,12 +20,15 @@ function NewBooks() {
 
 
     const slideCount = Math.max(1, Math.ceil(books.length / 3));
+    const [paused, setPaused] = useState(false);
     useEffect(() => {
+        if (paused || slideCount < 2) return;
+        if (!window.matchMedia(AUTO_ADVANCE_QUERY).matches) return;
         const timer = setInterval(() => {
             setCurrentBookSlide((prev) => (prev + 1) % slideCount);
         }, 5000)
         return () => clearInterval(timer)
-    }, [slideCount]);
+    }, [slideCount, paused]);
 
     const prevSlide = () => {
         setCurrentBookSlide((prev) => (prev - 1 + slideCount) % slideCount);
@@ -43,7 +49,12 @@ function NewBooks() {
         <section className='py-16 bg-gray-50'>
             <div className='container mx-auto px-4' >
                 <h2 className='text-3xl font-bold text-center mb-12'>Newly Added Books  </h2>
-                <div className='relative' >
+                <div className='relative'
+                    onMouseEnter={() => setPaused(true)}
+                    onMouseLeave={() => setPaused(false)}
+                    onFocus={() => setPaused(true)}
+                    onBlur = {() => setPaused(false)}
+                >
                     {isLoading ? (
                         <div className='flex justify-center py-8' >
                             <BookLoader />
