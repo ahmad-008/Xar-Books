@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { HydratedDocument } from "mongoose";
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { IUser, User } from "../models/User";
 import { AppError } from "../utils/AppError";
 import { clearAuthCookie, requireUserId, setAuthCookie } from "../utils/auth";
@@ -9,10 +9,14 @@ import { appUrl, readJson } from "../utils/http";
 import { toPublicUser } from "../utils/publicUser";
 import { sendEmail } from "../utils/sendEmail";
 import { clearRateLimit, clientIp, rateLimit } from "../utils/rateLimit";
+import { checkEmail, checkName, checkPassword } from "../utils/validate";
+
 
 
 
 const hashToken = (token: string) => crypto.createHash("sha256").update(token).digest("hex");
+const DUMMY_HASH = "$2b$12$sR79XRNF.g92SShrm4LUZew5om.Pq0DKmkoZd6rlWin/yNzOJyM8G";
+
 
 const sendVerificationEmail = async (user: HydratedDocument<IUser>, baseUrl: string) => {
     const verifyToken = crypto.randomBytes(32).toString("hex");
@@ -39,16 +43,16 @@ export const register = async (req: NextRequest) => {
         throw new AppError("Name, email and password are required", 400);
     }
 
-    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
-        throw new AppError("Enter a valid email", 400);
-    }
+   const cleanName = checkName(name);
+   const cleanEmail = checkEmail(email);
+   checkPassword(password);
 
     if (agreeTerms !== true) {
         throw new AppError("You must accept the terms", 400);
     }
     await rateLimit(`register:${clientIp(req)}`, 5, 60);
 
-    const user = await User.create({ name, email, password, agreeTerms });
+    const user = await User.create({ name: cleanName, email: cleanEmail, password, agreeTerms });
     try {
         await sendVerificationEmail(user, appUrl(req));
     } catch (error) {
@@ -75,7 +79,7 @@ export const login = async (req: NextRequest) => {
     await rateLimit(limitKey, 5, 15);
 
     const user = await User.findOne({ email: email.trim().toLowerCase() }).select("+password +tokenVersion");
-    const isPasswordCorrect = user ? await bcrypt.compare(password, user.password) : false;
+    const isPasswordCorrect = await bcrypt.compare(password, user?.password ?? DUMMY_HASH);
 
     if (!user || !isPasswordCorrect) {
         throw new AppError("Invalid email or password", 401);
@@ -103,6 +107,31 @@ export const getMe = async (req: NextRequest) => {
     return NextResponse.json({ success: true, data: toPublicUser(user) });
 };
 
+const sendResetEmail = async (user: HydratedDocument<IUser>, baseUrl: string) => {
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    
+    user.passwordResetToken = hashToken(resetToken);
+    user.passwordResetExpires= new Date(Date.now() + 15 * 60 * 1000);
+    await user.save();
+
+    try{
+            await sendEmail(
+            user.email,
+            "Reset your Xar Books password",
+            `<p>You asked to reset your password.</p>
+             <p><a href="${baseUrl}/reset-password?token=${resetToken}">Click here to choose a new password</a></p>
+             <p>This link expires in 15 minutes. If you didn't ask for this, ignore this email.</p>`
+        );
+    } catch (error) {
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+        await user.save();
+        throw error;
+    }
+
+};
+
+
 export const forgotPassword = async (req: NextRequest) => {
     const { email } = await readJson(req);
 
@@ -114,29 +143,8 @@ export const forgotPassword = async (req: NextRequest) => {
     const user = await User.findOne({ email: email.trim().toLowerCase() });
 
     if (user) {
-        const resetToken = crypto.randomBytes(32).toString("hex");
-
-        user.passwordResetToken = hashToken(resetToken);
-        user.passwordResetExpires = new Date(Date.now() + 15 * 60 * 1000);
-        await user.save();
-
-        const resetUrl = `${appUrl(req)}/reset-password?token=${resetToken}`;
-
-        try {
-            await sendEmail(
-                user.email,
-                "Reset your Xar Books password",
-                `<p>You asked to reset your password.</p>
-                 <p><a href="${resetUrl}">Click here to choose a new password</a></p>
-                 <p>This link expires in 15 minutes. If you didn't ask for this, ignore this email.</p>`
-            );
-        } catch (error) {
-            user.passwordResetToken = undefined;
-            user.passwordResetExpires = undefined;
-            await user.save();
-            console.error("Reset email failed:", error);
-            throw new AppError("Could not send the reset email, please try again later", 500);
-        }
+        const baseUrl = appUrl(req);
+        after(()=> sendResetEmail(user, baseUrl).catch((error)=> console.error("Reset email failed:", error)));
     }
 
     return NextResponse.json({
@@ -151,6 +159,8 @@ export const resetPassword = async (req: NextRequest) => {
     if (typeof token !== "string" || typeof password !== "string") {
         throw new AppError("Token and new password are required", 400);
     }
+    checkPassword(password);
+
     await rateLimit(`reset:${clientIp(req)}`,10, 15);
 
     const user = await User.findOne({

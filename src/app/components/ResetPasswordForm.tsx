@@ -88,7 +88,12 @@ export default function ResetPasswordForm({ token }: { token: string }) {
                             {...register("password", {
                                 required: "Password is required",
                                 minLength: { value: 8, message: "Password must be at least 8 characters" },
+                                maxLength: { value: 72, message: "Password must be at most 72 characters" },
+                                validate: (value) =>
+                                    (/[A-Za-z]/.test(value) && /[^A-Za-z]/.test(value)) ||
+                                    "Password must include a letter and a number or symbol",
                             })}
+
                         />
                         <button
                             type="button"
