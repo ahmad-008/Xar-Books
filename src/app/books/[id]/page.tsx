@@ -14,7 +14,7 @@ import { useAddToCartMutation, useAddToWishlistMutation, useGetCartQuery, useGet
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { RootState } from "@/store/store";
-import { toggleLoginDialog } from "@/store/slice/userSlice";
+import { setLoginDialogOpen } from "@/store/slice/userSlice";
 import { getErrorMessage } from "@/lib/getErrorMessage";
 import { BookLoader } from "@/lib/BookLoader";
 import NoData from "@/app/components/NoData";
@@ -29,17 +29,17 @@ const BookDetailsPage = () => {
 
     const { id } = useParams<{ id: string }>();
     const [selectedImage, setSelectedImage] = useState(0);
-    
 
 
-    const { data, isLoading } = useGetProductQuery(id);
+
+    const { data, isLoading, isError, error, isFetching, refetch } = useGetProductQuery(id);
     const book = data?.data;
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user.user);
     const { data: cart } = useGetCartQuery(undefined, { skip: !user });
     const [addToCart, { isLoading: isAdding }] = useAddToCartMutation();
-    const {data: wishlist} = useGetWishlistQuery(undefined, {skip: !user});
-    const [addToWishlist, {isLoading: isAddingWish}] = useAddToWishlistMutation();
+    const { data: wishlist } = useGetWishlistQuery(undefined, { skip: !user });
+    const [addToWishlist, { isLoading: isAddingWish }] = useAddToWishlistMutation();
     const [removeFromWishlist, { isLoading: isRemovingWish }] = useRemoveFromWishlistMutation();
     const isSavingWishlist = isAddingWish || isRemovingWish;
 
@@ -51,6 +51,23 @@ const BookDetailsPage = () => {
             </div>
         );
     }
+    const isNotFound = !!error && "status" in error && error.status === 404;
+    if (!book && isError && !isNotFound) {
+        return (
+            <NoData
+                message="Couldn't load this book"
+                description="Check your connection and try again."
+                action={
+                    <Button onClick={() => refetch()} disabled={isFetching} className="rounded-md normal-case tracking-normal">
+                        {isFetching && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
+                        Try again
+                    </Button>
+                }
+            />
+        );
+    }
+
+
 
     if (!book) {
         return (
@@ -68,7 +85,7 @@ const BookDetailsPage = () => {
 
     const handleAddToCart = async () => {
         if (!user) {
-            dispatch(toggleLoginDialog());
+            dispatch(setLoginDialogOpen(true));
             return;
         }
         try {
@@ -83,7 +100,7 @@ const BookDetailsPage = () => {
 
     const handleToggleWishlist = async () => {
         if (!user) {
-            dispatch(toggleLoginDialog());
+            dispatch(setLoginDialogOpen(true));
             return;
         }
         try {

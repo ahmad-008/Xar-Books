@@ -38,8 +38,15 @@ const readAddress = (input: unknown): IShippingAddress => {
 
     const isMissing = ADDRESS_FIELDS.some((field) => field !== "addressLine2" && !address[field]);
     if (isMissing) {
-        throw new AppError("Please fill in your full shipping address", 400);
+               throw new AppError("Please fill in your full shipping address", 400);
     }
+    if (!/^[0-9+\-\s()]{7,20}$/.test(address.phone ?? "")) {
+        throw new AppError("Enter a valid phone number", 400);
+    }
+    if (!/^[A-Za-z0-9\s-]{3,10}$/.test(address.postalCode ?? "")) {
+        throw new AppError("Enter a valid postal code", 400);
+    }
+
 
     return address as IShippingAddress;
 };

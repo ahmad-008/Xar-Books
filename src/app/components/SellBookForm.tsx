@@ -7,7 +7,7 @@ import ImagePicker, { PickedImage } from "@/app/components/ImagePicker";
 import { Product, useCreateProductMutation, useUpdateProductImagesMutation, useUpdateProductMutation } from "@/store/api";
 import { Controller, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { toggleLoginDialog } from "@/store/slice/userSlice";
+import { setLoginDialogOpen } from "@/store/slice/userSlice";
 import toast from "react-hot-toast";
 import { getErrorMessage } from "@/lib/getErrorMessage";
 import { Label } from "@/components/ui/label";
@@ -85,7 +85,7 @@ export default function SellBookForm({ product }: { product?: Product }) {
                 <h1 className="text-2xl font-bold" >Sell your books</h1>
                 <p className="text-gray-600" >Log in to list a book for sale.</p>
 
-                <Button onClick={() => dispatch(toggleLoginDialog())} className="normal-case tracking-normal" >
+                <Button onClick={() => dispatch(setLoginDialogOpen(true))} className="normal-case tracking-normal" >
 
                     Log in / Sign up
                 </Button>

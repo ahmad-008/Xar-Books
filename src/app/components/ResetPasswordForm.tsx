@@ -10,7 +10,7 @@ import { CheckCircle2, Eye, EyeOff, LoaderCircle, Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useResetPasswordMutation } from "@/store/api";
-import { logout, toggleLoginDialog } from "@/store/slice/userSlice";
+import { logout, setLoginDialogOpen } from "@/store/slice/userSlice";
 import { getErrorMessage } from "@/lib/getErrorMessage";
 
 interface ResetPasswordFormData {
@@ -44,7 +44,7 @@ export default function ResetPasswordForm({ token }: { token: string }) {
 
     const goToLogin = () => {
         router.push("/");
-        dispatch(toggleLoginDialog());
+        dispatch(setLoginDialogOpen(true));
     };
 
     if (!token) {

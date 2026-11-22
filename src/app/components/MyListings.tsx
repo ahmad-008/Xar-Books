@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { LoaderCircle, Pencil, Plus, Trash2 } from "lucide-react";
 import { BookLoader } from "@/lib/BookLoader";
 import { useDeleteProductMutation, useGetMyProductsQuery } from "@/store/api";
-import { toggleLoginDialog } from "@/store/slice/userSlice";
+import { setLoginDialogOpen } from "@/store/slice/userSlice";
 import { RootState } from "@/store/store";
 import NoData from "@/app/components/NoData";
 import Image from "next/image";
@@ -30,7 +30,7 @@ export default function MyListings() {
                 <h1 className="text-2xl font-bold">My listings</h1>
                 <p className="text-gray-600">Log in to see the books you&apos;ve listed.</p>
 
-                <Button onClick={() => dispatch(toggleLoginDialog())} className="normal-case tracking-normal" >
+                <Button onClick={() => dispatch(setLoginDialogOpen(true))} className="normal-case tracking-normal" >
                     Log in / Sign up
                 </Button>
 

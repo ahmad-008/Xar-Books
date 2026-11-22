@@ -11,7 +11,7 @@ import { BookLoader } from "@/lib/BookLoader";
 import { getErrorMessage } from "@/lib/getErrorMessage";
 import { useClearCartMutation, useGetCartQuery, useRemoveFromCartMutation } from "@/store/api";
 import { RootState } from "@/store/store";
-import { toggleLoginDialog } from "@/store/slice/userSlice";
+import { setLoginDialogOpen } from "@/store/slice/userSlice";
 import NoData from "./NoData";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -34,7 +34,7 @@ export default function CartContent() {
             <div className="space-y-4 rounded-lg border bg-white p-8 text-center shadow-sm">
                 <h1 className="text-2xl font-bold">Your cart</h1>
                 <p className="text-gray-600">Log in to see your cart.</p>
-                <Button onClick={() => dispatch(toggleLoginDialog())} className="normal-case tracking-normal">
+                <Button onClick={() => dispatch(setLoginDialogOpen(true))} className="normal-case tracking-normal">
                     Log in / Sign up
                 </Button>
             </div>

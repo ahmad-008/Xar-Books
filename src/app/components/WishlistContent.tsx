@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { BookLoader } from "@/lib/BookLoader";
 import { getErrorMessage } from "@/lib/getErrorMessage";
 import { useAddToCartMutation, useGetWishlistQuery, useRemoveFromWishlistMutation } from "@/store/api";
-import { toggleLoginDialog } from "@/store/slice/userSlice";
+import { setLoginDialogOpen } from "@/store/slice/userSlice";
 import { RootState } from "@/store/store";
 import NoData from "@/app/components/NoData";
 
@@ -30,7 +30,7 @@ export default function WishlistContent() {
             <div className="space-y-4 rounded-lg border bg-white p-8 text-center shadow-sm">
                 <h1 className="text-2xl font-bold">My wishlist</h1>
                 <p className="text-gray-600">Log in to see the books you&apos;ve saved.</p>
-                <Button onClick={() => dispatch(toggleLoginDialog())} className="normal-case tracking-normal">
+                <Button onClick={() => dispatch(setLoginDialogOpen(true))} className="normal-case tracking-normal">
                     Log in / Sign up
                 </Button>
             </div>

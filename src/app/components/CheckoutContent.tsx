@@ -14,7 +14,7 @@ import { BookLoader } from "@/lib/BookLoader";
 import { getErrorMessage } from "@/lib/getErrorMessage";
 import { ShippingAddress, useCreateOrderMutation, useGetCartQuery, PaymentMethod } from "@/store/api";
 import { RootState } from "@/store/store";
-import { toggleLoginDialog } from "@/store/slice/userSlice";
+import { setLoginDialogOpen } from "@/store/slice/userSlice";
 import NoData from "./NoData";
 
 const FIELDS: { name: keyof ShippingAddress; label: string; optional?: boolean; maxLength: number }[] = [
@@ -27,6 +27,26 @@ const FIELDS: { name: keyof ShippingAddress; label: string; optional?: boolean; 
     { name: "postalCode", label: "Postal code", maxLength: 20 },
     { name: "country", label: "Country", maxLength: 100 },
 ];
+
+const PHONE_PATTERN = /^[0-9+\-\s()]{7,20}$/;
+const POSTAL_PATTERN = /^[A-Za-z0-9\s-]{3,10}$/;
+
+type AddressErrors = Partial<Record<keyof ShippingAddress, string>>;
+const validateAddress = (address: ShippingAddress) => {
+    const errors: AddressErrors = {};
+    for (const field of FIELDS) {
+        if (!field.optional && !(address[field.name] ?? "").trim()) {
+            errors[field.name] = `Enter your ${field.label.toLowerCase()}`;
+        }
+    }
+    if (!errors.phone && !PHONE_PATTERN.test(address.phone.trim())) {
+        errors.phone = "Enter a valid phone number";
+    }
+    if (!errors.postalCode && !POSTAL_PATTERN.test(address.postalCode.trim())) {
+        errors.postalCode = "Enter a valid postal code";
+    }
+    return errors;
+};
 
 const PAYMENT_OPTIONS: { value: PaymentMethod; label: string; description: string }[] = [
     { value: "COD", label: "Cash on delivery", description: "pay when your books arrive." },
@@ -52,6 +72,7 @@ export default function CheckoutContent() {
     const [createOrder, { isLoading: isPlacing }] = useCreateOrderMutation();
     const [address, setAddress] = useState<ShippingAddress>(EMPTY_ADDRESS);
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("COD");
+    const [errors, setErrors] = useState<AddressErrors>({});
 
 
     if (!user) {
@@ -59,7 +80,7 @@ export default function CheckoutContent() {
             <div className="space-y-4 rounded-lg border bg-white p-8 text-center shadow-sm">
                 <h1 className="text-2xl font-bold">Checkout</h1>
                 <p className="text-gray-600">Log in to place your order.</p>
-                <Button onClick={() => dispatch(toggleLoginDialog())} className="normal-case tracking-normal">
+                <Button onClick={() => dispatch(setLoginDialogOpen(true))} className="normal-case tracking-normal">
                     Log in / Sign up
                 </Button>
             </div>
@@ -92,6 +113,9 @@ export default function CheckoutContent() {
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        const found = validateAddress(address);
+        setErrors(found);
+        if (Object.keys(found).length> 0) return;
         try {
             const result = await createOrder({ paymentMethod, shippingAddress: address }).unwrap();
             if(result.checkoutUrl){
@@ -106,7 +130,7 @@ export default function CheckoutContent() {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <form onSubmit={handleSubmit} noValidate className="grid gap-6 lg:grid-cols-[1fr_320px]">
             <Card className="gap-0 rounded-xl py-0 shadow-md">
                 <CardContent className="space-y-4 p-6">
                     <h1 className="text-2xl font-bold">Shipping address</h1>
@@ -117,11 +141,15 @@ export default function CheckoutContent() {
                                 <Input
                                     id={field.name}
                                     value={address[field.name] ?? ""}
-                                    onChange={(event) => setAddress({ ...address, [field.name]: event.target.value })}
-                                    required={!field.optional}
+                                    onChange={(event)=> {
+                                        setAddress({...address, [field.name]: event.target.value});
+                                        setErrors({...errors, [field.name]: undefined});
+                                    }}
                                     maxLength={field.maxLength}
                                     autoComplete="on"
+                                    aria-invalid={!!errors[field.name]}
                                 />
+                                {errors[field.name] && <p className="text-sm text-red-500">{errors[field.name]}</p>}
                             </div>
                         ))}
                     </div>
