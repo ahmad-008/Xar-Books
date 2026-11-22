@@ -4,12 +4,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import { CreditCard, LoaderCircle, XCircle } from "lucide-react";
+import { CreditCard, LoaderCircle, PackageCheck, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookLoader } from "@/lib/BookLoader";
 import { getErrorMessage } from "@/lib/getErrorMessage";
-import { Order, useCancelOrderMutation, useGetMyOrdersQuery, usePayOrderMutation } from "@/store/api";
+import { Order, useCancelOrderMutation, useConfirmReceivedMutation, useGetMyOrdersQuery, usePayOrderMutation } from "@/store/api";
 import { RootState } from "@/store/store";
 import { setLoginDialogOpen } from "@/store/slice/userSlice";
 import NoData from "./NoData";
@@ -22,10 +22,10 @@ const STATUS_STYLES: Record<Order["orderStatus"], string> = {
 };
 
 const canCancel = (order: Order) =>
-    order.orderStatus === "processing" && 
+    order.orderStatus === "processing" &&
     order.items.every((item) => item.status === "processing" || item.status === "cancelled");
 
-const canPay=  (order: Order) => 
+const canPay = (order: Order) =>
     order.paymentMethod === "Card" && order.paymentStatus === "pending" && order.orderStatus === "processing";
 
 const paymentLabel = (order: Order) => {
@@ -40,6 +40,7 @@ export default function MyOrdersContent() {
     const { data, isLoading, isError } = useGetMyOrdersQuery(undefined, { skip: !user, refetchOnMountOrArgChange: true, });
     const [cancelOrder, { isLoading: isCancelling, originalArgs: cancellingId }] = useCancelOrderMutation();
     const [payOrder, { isLoading: isPaying, originalArgs: payingId }] = usePayOrderMutation();
+    const [confirmReceived,  {isLoading: isConfirming, originalArgs: confirmingId}] = useConfirmReceivedMutation();
 
     if (!user) {
         return (
@@ -89,11 +90,21 @@ export default function MyOrdersContent() {
         }
     };
 
+    const handleReceived = async(id: string) => {
+        if(!window.confirm("Have all the books in this order arrived?")) return;
+        try {
+            const result = await confirmReceived(id).unwrap();
+            toast.success(result.message ?? "Order marked as received");
+        } catch (error) {
+            toast.error(getErrorMessage(error));
+        }
+    }
+
     const handlePay = async (id: string) => {
         try {
-            const result =await payOrder(id).unwrap();
+            const result = await payOrder(id).unwrap();
             window.location.assign(result.checkoutUrl);
-        } catch(error){
+        } catch (error) {
             toast.error(getErrorMessage(error));
         }
     };
@@ -154,6 +165,29 @@ export default function MyOrdersContent() {
                                 )
 
                                 }
+
+                                {order.orderStatus === "shipped" && (
+                                    <Button
+                                        size="sm"
+                                        onClick={() => handleReceived(order._id)}
+                                        disabled={isConfirming}
+                                        className="normal-case tracking-normal"
+
+                                    >
+                                        {isConfirming && confirmingId === order._id ? (
+                                            <LoaderCircle className="mr-1 h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <PackageCheck className="mr-1 h-4 w-4" />
+                                        )
+
+                                        }
+                                        Confirm received
+
+                                    </Button>
+                                )
+
+                                }
+
                                 {canCancel(order) && (
                                     <Button
                                         variant="outline"

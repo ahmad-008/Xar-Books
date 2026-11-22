@@ -244,6 +244,34 @@ const overallStatus = (items: IOrderItem[]) => {
     return "processing";
 };
 
+export const confirmReceived = async (req: NextRequest, { id }: Params) => {
+    const userId = await requireUserId(req);
+
+    if (!isValidObjectId(id)) {
+        throw new AppError("Order not found", 404);
+    }
+
+    const order = await Order.findOne({ _id: id, buyer: userId });
+    if (!order) {
+        throw new AppError("Order not found", 404);
+    }
+
+    if (order.orderStatus !== "shipped") {
+        throw new AppError("You can confirm once all your books have shipped", 400);
+    }
+
+    order.items.forEach((item) => {
+        if (item.status === "shipped") item.status = "delivered";
+    });
+    order.orderStatus = overallStatus(order.items);
+    if (order.paymentMethod === "COD") {
+        order.paymentStatus = "paid";
+    }
+    await order.save();
+
+    return NextResponse.json({ success: true, message: "Thanks! Your order is marked as received", data: order });
+};
+
 
 const toSellerView = (order: HydratedDocument<IOrder>, sellerId: string) => ({
     _id: order._id,
@@ -270,8 +298,8 @@ export const updateSellingStatus = async (req: NextRequest, { id }: Params) => {
     const userId = await requireUserId(req);
     const { status } = await readJson(req);
 
-    if (status !== "shipped" && status !== "delivered") {
-        throw new AppError("Status must be shipped or delivered", 400);
+    if (status !== "shipped") {
+        throw new AppError("Only the buyer can confirm delivery", 400);
     }
 
     if (!isValidObjectId(id)) {
@@ -295,21 +323,14 @@ export const updateSellingStatus = async (req: NextRequest, { id }: Params) => {
     if(myItems.length === 0){
         throw new AppError("You rejected this order", 400);
     }
-    const required = status === "shipped" ? "processing" : "shipped";
-
-    if (myItems.some((item) => item.status !== required)) {
-        throw new AppError(`Only ${required} books can be marked as ${status}`, 400);
+    if (myItems.some((item) => item.status !== "processing")) {
+        throw new AppError("These books are already shipped", 400);
     }
 
     myItems.forEach((item) => {
         item.status = status;
     });
     order.orderStatus = overallStatus(order.items);
-
-    if (order.orderStatus === "delivered" && order.paymentMethod === "COD") {
-        order.paymentStatus = "paid";
-    }
-
     await order.save();
 
     return NextResponse.json({

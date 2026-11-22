@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import { LoaderCircle, MapPin, Truck, PackageCheck, X } from "lucide-react";
+import { LoaderCircle, MapPin, Truck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookLoader } from "@/lib/BookLoader";
@@ -21,13 +21,12 @@ const ITEM_STYLES: Record<OrderItem["status"], string> = {
     cancelled: "bg-gray-200 text-gray-700",
 };
 
-const activeItems = (order: SellingOrder) => order.items.filter((item)=> item.status !== "cancelled");
+const activeItems = (order: SellingOrder) => order.items.filter((item) => item.status !== "cancelled");
 
 const nextAction = (order: SellingOrder) => {
     const items = activeItems(order);
     if (order.orderStatus === "cancelled" || items.length === 0) return null;
     if (items.every((item) => item.status === "processing")) return "shipped" as const;
-    if (items.every((item) => item.status === "shipped")) return "delivered" as const;
     return null;
 };
 
@@ -39,8 +38,8 @@ export default function MySalesContent() {
         refetchOnMountOrArgChange: true,
     });
 
-    const [updateStatus, {isLoading: isUpdating, originalArgs}] = useUpdateSellingStatusMutation();
-    const [rejectOrder, {isLoading: isRejecting, originalArgs: rejectingId}] = useRejectSellingOrderMutation();
+    const [updateStatus, { isLoading: isUpdating, originalArgs }] = useUpdateSellingStatusMutation();
+    const [rejectOrder, { isLoading: isRejecting, originalArgs: rejectingId }] = useRejectSellingOrderMutation();
 
     if (!user) {
         return (
@@ -79,8 +78,7 @@ export default function MySalesContent() {
         );
     }
 
-    const handleUpdate = async (id: string, status: "shipped" | "delivered") => {
-        if (status === "delivered" && !window.confirm("Confirm the buyer has received these books?")) return;
+    const handleUpdate = async (id: string, status: "shipped") => {
         try {
             const result = await updateStatus({ id, status }).unwrap();
             toast.success(result.message ?? "Order updated");
@@ -90,14 +88,15 @@ export default function MySalesContent() {
     };
 
     const handleReject = async (id: string) => {
-        if(!window.confirm("Reject this order? Your books will go back on sale.")) return;
-        try{
+        if (!window.confirm("Reject this order? Your books will go back on sale.")) return;
+        try {
             const result = await rejectOrder(id).unwrap();
             toast.success(result.message ?? "Order rejected");
 
         } catch (error) {
             toast.error(getErrorMessage(error));
-        } };
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -186,17 +185,19 @@ export default function MySalesContent() {
                                         >
                                             {isBusy ? (
                                                 <LoaderCircle className="mr-1 h-4 w-4 animate-spin" />
-                                            ) : action === "shipped" ? (
+                                            ):(
                                                 <Truck className="mr-1 h-4 w-4" />
-                                            ) : (
-                                                <PackageCheck className="mr-1 h-4 w-4" />
-                                            )}
-                                            {action === "shipped" ? "Mark as shipped" : "Mark as delivered"}
+                                            )
+
+                                            }
+                                            Mark as shipped
                                         </Button>
                                     </div>
-                                ) : (
+                                ) : activeItems(order).every((item) => item.status === "delivered") ? (
                                     <span className="font-medium text-green-700">Delivered</span>
-                                )}
+
+                                ) : (
+                                    <span className="text-muted-foreground">Shipped, waiting for the buyer to confirm</span>)}
                             </div>
                         </li>
                     );
