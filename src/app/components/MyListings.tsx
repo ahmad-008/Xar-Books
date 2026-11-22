@@ -1,11 +1,11 @@
 "use client";
 
+import LoginRequired from "./LoginRequired";
 import Link from "next/link";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { LoaderCircle, Pencil, Plus, Trash2 } from "lucide-react";
 import { BookLoader } from "@/lib/BookLoader";
 import { useDeleteProductMutation, useGetMyProductsQuery } from "@/store/api";
-import { setLoginDialogOpen } from "@/store/slice/userSlice";
 import { RootState } from "@/store/store";
 import NoData from "@/app/components/NoData";
 import Image from "next/image";
@@ -18,7 +18,6 @@ import { getErrorMessage } from "@/lib/getErrorMessage";
 
 
 export default function MyListings() {
-    const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user.user);
     const { data, isLoading, isError } = useGetMyProductsQuery(undefined, { skip: !user });
     const [deleteProduct, {isLoading: isDeleting, originalArgs: deletingId}]= useDeleteProductMutation();
@@ -26,15 +25,7 @@ export default function MyListings() {
 
     if (!user) {
         return (
-            <div className="space-y-4 rounded-lg border bg-white p-8 text-center shadow-sm">
-                <h1 className="text-2xl font-bold">My listings</h1>
-                <p className="text-gray-600">Log in to see the books you&apos;ve listed.</p>
-
-                <Button onClick={() => dispatch(setLoginDialogOpen(true))} className="normal-case tracking-normal" >
-                    Log in / Sign up
-                </Button>
-
-            </div>
+            <LoginRequired title="My listings" message="Log in to see the books you've listed." />
         );
     }
 

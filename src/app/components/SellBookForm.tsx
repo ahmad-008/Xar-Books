@@ -1,13 +1,13 @@
 "use client";
 
+import LoginRequired from "./LoginRequired";
 import { RootState } from "@/store/store";
 import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import ImagePicker, { PickedImage } from "@/app/components/ImagePicker";
 import { Product, useCreateProductMutation, useUpdateProductImagesMutation, useUpdateProductMutation } from "@/store/api";
 import { Controller, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { setLoginDialogOpen } from "@/store/slice/userSlice";
 import toast from "react-hot-toast";
 import { getErrorMessage } from "@/lib/getErrorMessage";
 import { Label } from "@/components/ui/label";
@@ -60,7 +60,6 @@ const ErrorText = ({ message }: { message?: string }) =>
 
 export default function SellBookForm({ product }: { product?: Product }) {
     const isEditing = Boolean(product);
-    const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user.user);
     const [images, setImages] = useState<PickedImage[]>(
         () => product?.images.map((url) => ({ id: url, preview: url })) ?? []
@@ -81,15 +80,7 @@ export default function SellBookForm({ product }: { product?: Product }) {
 
     if (!user) {
         return (
-            <div className="space-y-4 rounded-lg border bg-white p-8 text-center shadow-sm" >
-                <h1 className="text-2xl font-bold" >Sell your books</h1>
-                <p className="text-gray-600" >Log in to list a book for sale.</p>
-
-                <Button onClick={() => dispatch(setLoginDialogOpen(true))} className="normal-case tracking-normal" >
-
-                    Log in / Sign up
-                </Button>
-            </div>
+            <LoginRequired title="Sell your books" message="Log in to list a book for sale." />
         );
     }
 

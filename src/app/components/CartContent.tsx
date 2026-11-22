@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { LoaderCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,8 @@ import { BookLoader } from "@/lib/BookLoader";
 import { getErrorMessage } from "@/lib/getErrorMessage";
 import { useClearCartMutation, useGetCartQuery, useRemoveFromCartMutation } from "@/store/api";
 import { RootState } from "@/store/store";
-import { setLoginDialogOpen } from "@/store/slice/userSlice";
 import NoData from "./NoData";
+import LoginRequired from "./LoginRequired";
 import { Card, CardContent } from "@/components/ui/card";
 
 
@@ -22,7 +22,6 @@ import { Card, CardContent } from "@/components/ui/card";
 
 
 export default function CartContent() {
-    const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user.user);
     const { data, isLoading, isError } = useGetCartQuery(undefined, { skip: !user });
     const [removeFromCart, { isLoading: isRemoving, originalArgs: removingId }] = useRemoveFromCartMutation();
@@ -31,13 +30,7 @@ export default function CartContent() {
 
     if (!user) {
         return (
-            <div className="space-y-4 rounded-lg border bg-white p-8 text-center shadow-sm">
-                <h1 className="text-2xl font-bold">Your cart</h1>
-                <p className="text-gray-600">Log in to see your cart.</p>
-                <Button onClick={() => dispatch(setLoginDialogOpen(true))} className="normal-case tracking-normal">
-                    Log in / Sign up
-                </Button>
-            </div>
+            <LoginRequired title="Your cart" message="Log in to see your cart." />
         );
     }
 

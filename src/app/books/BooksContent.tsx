@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { filters } from "@/lib/Constant";
 import { ProductFilters, useGetProductsQuery } from "@/store/api";
 import { BookLoader } from "@/lib/BookLoader";
+import { discountPercent } from "@/lib/discount";
 import Link from "next/link";
 import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
@@ -86,9 +87,6 @@ const BooksContent = () => {
     const products = data?.data ?? [];
     const total = data?.pagination?.total ?? 0;
     const totalPages = data?.pagination?.pages ?? 0;
-
-    const calculateDiscount = (price: number, finalPrice: number) =>
-        price > finalPrice && price > 0 ? Math.round(((price - finalPrice) / price) * 100) : 0;
 
     return (
         <div className="min-h-screen bg-gray-50" >
@@ -176,7 +174,7 @@ const BooksContent = () => {
                                 <div className={`grid gap-6 sm:grid-cols-2 lg:grid-cols-3 ${isFetching ? "opacity-60" : ""}`}>
 
                                     {products.map((book, index) => {
-                                        const discount = calculateDiscount(book.price, book.finalPrice);
+                                        const discount = discountPercent(book.price, book.finalPrice);
                                         return (
                                             <motion.div
                                                 key={book._id}

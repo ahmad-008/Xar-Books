@@ -2,6 +2,7 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { BookLoader } from '@/lib/BookLoader';
+import { discountPercent } from '@/lib/discount';
 import { useGetProductsQuery } from '@/store/api';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
@@ -37,13 +38,6 @@ function NewBooks() {
         setCurrentBookSlide((prev) => (prev + 1) % slideCount);
     }
 
-
-    const calculateDiscount = (price: number, finalPrice: number): number => {
-        if (price > finalPrice && price > 0) {
-            return Math.round(((price - finalPrice) / price) * 100)
-        }
-        return 0;
-    }
 
     return (
         <section className='py-16 bg-gray-50'>
@@ -84,9 +78,9 @@ function NewBooks() {
                                                                         className='mb-4 h-50 w-full object-cover rounded-md'
                                                                     >
                                                                     </Image>
-                                                                    {calculateDiscount(book.price, book.finalPrice) > 0 && (
+                                                                    {discountPercent(book.price, book.finalPrice) > 0 && (
                                                                         <span className='absolute left-0 top-2 rounded-r-lg bg-red-500 px-2 py-1 text-xs font-medium text-white' >
-                                                                            {calculateDiscount(book.price, book.finalPrice)} % Off
+                                                                            {discountPercent(book.price, book.finalPrice)} % Off
                                                                         </span>
                                                                     )}
                                                                     <h3 className='mb-2 line-clamp-2 text-sm font-medium' >

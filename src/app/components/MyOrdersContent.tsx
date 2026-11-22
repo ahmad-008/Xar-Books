@@ -2,24 +2,18 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { CreditCard, LoaderCircle, PackageCheck, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookLoader } from "@/lib/BookLoader";
 import { getErrorMessage } from "@/lib/getErrorMessage";
+import { STATUS_STYLES } from "@/lib/orderStatus";
 import { Order, useCancelOrderMutation, useConfirmReceivedMutation, useGetMyOrdersQuery, usePayOrderMutation } from "@/store/api";
 import { RootState } from "@/store/store";
-import { setLoginDialogOpen } from "@/store/slice/userSlice";
 import NoData from "./NoData";
-
-const STATUS_STYLES: Record<Order["orderStatus"], string> = {
-    processing: "bg-amber-100 text-amber-800",
-    shipped: "bg-blue-100 text-blue-800",
-    delivered: "bg-green-100 text-green-800",
-    cancelled: "bg-gray-200 text-gray-700",
-};
+import LoginRequired from "./LoginRequired";
 
 const canCancel = (order: Order) =>
     order.orderStatus === "processing" &&
@@ -35,7 +29,6 @@ const paymentLabel = (order: Order) => {
 };
 
 export default function MyOrdersContent() {
-    const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user.user);
     const { data, isLoading, isError } = useGetMyOrdersQuery(undefined, { skip: !user, refetchOnMountOrArgChange: true, });
     const [cancelOrder, { isLoading: isCancelling, originalArgs: cancellingId }] = useCancelOrderMutation();
@@ -44,13 +37,7 @@ export default function MyOrdersContent() {
 
     if (!user) {
         return (
-            <div className="space-y-4 rounded-lg border bg-white p-8 text-center shadow-sm">
-                <h1 className="text-2xl font-bold">My orders</h1>
-                <p className="text-gray-600">Log in to see your orders.</p>
-                <Button onClick={() => dispatch(setLoginDialogOpen(true))} className="normal-case tracking-normal">
-                    Log in / Sign up
-                </Button>
-            </div>
+            <LoginRequired title="My orders" message="Log in to see your orders." />
         );
     }
 
