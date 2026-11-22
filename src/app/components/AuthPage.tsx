@@ -255,7 +255,10 @@ const AuthPage = ({ isLoginOpen, setIsLoginOpen }: AuthPageProps) => {
                                         type="text"
                                         placeholder="Full name"
                                         className="pl-10"
-                                        {...registerSignup("name", { required: "Name is required" })}
+                                        {...registerSignup("name", { required: "Name is required",
+                                                                    validate: (value)=> (value.trim().length >= 2 && value.trim().length <= 50) || "Name must be 2 to 50 characters",
+
+                                         })}
                                     />
                                 </div>
                                 {signupErrors.name && (
@@ -273,7 +276,7 @@ const AuthPage = ({ isLoginOpen, setIsLoginOpen }: AuthPageProps) => {
                                         className="pl-10"
                                         {...registerSignup("email", {
                                             required: "Email is required",
-                                            pattern: { value: /^\S+@\S+\.\S+$/, message: "Enter a valid email" },
+                                            pattern: { value: /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/, message: "Enter a valid email" },
                                         })}
                                     />
                                 </div>
@@ -293,6 +296,11 @@ const AuthPage = ({ isLoginOpen, setIsLoginOpen }: AuthPageProps) => {
                                         {...registerSignup("password", {
                                             required: "Password is required",
                                             minLength: { value: 8, message: "Password must be at least 8 characters" },
+                                            maxLength: {value: 72, message: "Password must be at most 72 characters"},
+                                            validate: (value) =>
+                                            (/[A-Za-z]/.test(value) && /[^A-Za-z]/.test(value)) || 
+                                            "Password must include a letter and a number or symbol",
+                                        
                                         })}
                                     />
                                     <button

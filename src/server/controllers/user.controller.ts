@@ -7,6 +7,7 @@ import { readJson } from "../utils/http";
 import { toPublicUser } from "../utils/publicUser";
 import { rateLimit } from "../utils/rateLimit";
 import { deleteImage, readImages, uploadImage } from "../utils/uploadImage";
+import { checkName, checkPassword } from "../utils/validate";
 
 
 
@@ -26,10 +27,10 @@ export const updateProfile = async (req: NextRequest) => {
     const {name, phoneNumber} = await readJson(req);
 
     if (name !== undefined){
-        if (typeof name !== "string" || name.trim().length <2 || name.trim().length > 50){
+        if (typeof name !== "string"){
             throw new AppError("Name must be 2 to 50 characters", 400);
         }
-        user.name = name.trim();
+        user.name = checkName(name);
     }
 
     if(phoneNumber !== undefined) {
@@ -106,6 +107,7 @@ export const changePassword = async(req: NextRequest) => {
     if (currentPassword === newPassword){
         throw new AppError("Choose a password different from your current one", 400);
     }
+    checkPassword(newPassword);
 
     user.password = newPassword;
     await  user.save();

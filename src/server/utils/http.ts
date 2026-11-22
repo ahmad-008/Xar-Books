@@ -22,8 +22,10 @@ const toErrorResponse = (error: unknown) => {
         return fail(400, firstError?.message ?? "Invalid data");
     }
 
-    if (typeof error === "object" && error !== null && "code" in error && error.code === 11000) {
-        return fail(409, "An account with this email already exists");
+    const mongoError = error as {code?: unknown; keyPattern?: Record<string, unknown>} | null;
+    if (mongoError?.code === 11000){
+        const message = mongoError.keyPattern?.email ? "An account with this email already exists" : "This already exists";
+        return fail(409, message);
     }
 
     console.error(error);
