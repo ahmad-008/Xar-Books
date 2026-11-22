@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,8 +14,8 @@ import { BookLoader } from "@/lib/BookLoader";
 import { getErrorMessage } from "@/lib/getErrorMessage";
 import { ShippingAddress, useCreateOrderMutation, useGetCartQuery, PaymentMethod } from "@/store/api";
 import { RootState } from "@/store/store";
-import { setLoginDialogOpen } from "@/store/slice/userSlice";
 import NoData from "./NoData";
+import LoginRequired from "./LoginRequired";
 
 const FIELDS: { name: keyof ShippingAddress; label: string; optional?: boolean; maxLength: number }[] = [
     { name: "fullName", label: "Full name", maxLength: 100 },
@@ -66,7 +66,6 @@ const EMPTY_ADDRESS: ShippingAddress = {
 
 export default function CheckoutContent() {
     const router = useRouter();
-    const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user.user);
     const { data, isLoading } = useGetCartQuery(undefined, { skip: !user });
     const [createOrder, { isLoading: isPlacing }] = useCreateOrderMutation();
@@ -77,13 +76,7 @@ export default function CheckoutContent() {
 
     if (!user) {
         return (
-            <div className="space-y-4 rounded-lg border bg-white p-8 text-center shadow-sm">
-                <h1 className="text-2xl font-bold">Checkout</h1>
-                <p className="text-gray-600">Log in to place your order.</p>
-                <Button onClick={() => dispatch(setLoginDialogOpen(true))} className="normal-case tracking-normal">
-                    Log in / Sign up
-                </Button>
-            </div>
+            <LoginRequired title="Checkout" message="Log in to place your order." />
         );
     }
 

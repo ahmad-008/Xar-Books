@@ -2,24 +2,18 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { LoaderCircle, MapPin, Truck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookLoader } from "@/lib/BookLoader";
 import { getErrorMessage } from "@/lib/getErrorMessage";
-import { OrderItem, SellingOrder, useGetSellingOrdersQuery, useRejectSellingOrderMutation, useUpdateSellingStatusMutation } from "@/store/api";
+import { STATUS_STYLES } from "@/lib/orderStatus";
+import { SellingOrder, useGetSellingOrdersQuery, useRejectSellingOrderMutation, useUpdateSellingStatusMutation } from "@/store/api";
 import { RootState } from "@/store/store";
-import { setLoginDialogOpen } from "@/store/slice/userSlice";
 import NoData from "./NoData";
-
-const ITEM_STYLES: Record<OrderItem["status"], string> = {
-    processing: "bg-amber-100 text-amber-800",
-    shipped: "bg-blue-100 text-blue-800",
-    delivered: "bg-green-100 text-green-800",
-    cancelled: "bg-gray-200 text-gray-700",
-};
+import LoginRequired from "./LoginRequired";
 
 const activeItems = (order: SellingOrder) => order.items.filter((item) => item.status !== "cancelled");
 
@@ -31,7 +25,6 @@ const nextAction = (order: SellingOrder) => {
 };
 
 export default function MySalesContent() {
-    const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user.user);
     const { data, isLoading, isError } = useGetSellingOrdersQuery(undefined, {
         skip: !user,
@@ -43,13 +36,7 @@ export default function MySalesContent() {
 
     if (!user) {
         return (
-            <div className="space-y-4 rounded-lg border bg-white p-8 text-center shadow-sm">
-                <h1 className="text-2xl font-bold">My sales</h1>
-                <p className="text-gray-600">Log in to see the books you&apos;ve sold.</p>
-                <Button onClick={() => dispatch(setLoginDialogOpen(true))} className="normal-case tracking-normal">
-                    Log in / Sign up
-                </Button>
-            </div>
+            <LoginRequired title="My sales" message="Log in to see the books you've sold." />
         );
     }
 
@@ -129,7 +116,7 @@ export default function MySalesContent() {
                                             <Image src={item.image || "/images/no-book.jpg"} alt={item.title} fill sizes="40px" className="object-cover" />
                                         </div>
                                         <span className="line-clamp-1 min-w-0 flex-1 text-sm">{item.title}</span>
-                                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${ITEM_STYLES[item.status]}`}>
+                                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${STATUS_STYLES[item.status]}`}>
                                             {item.status}
                                         </span>
                                         <span className="w-16 text-right text-sm">${item.price.toFixed(2)}</span>

@@ -1,5 +1,6 @@
 "use client";
 
+import { discountPercent } from "@/lib/discount";
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
@@ -116,10 +117,7 @@ const BookDetailsPage = () => {
     const images = book.images.length > 0 ? book.images : ["/images/no-book.jpg"];
 
 
-    const discount =
-        book.price > book.finalPrice
-            ? Math.round(((book.price - book.finalPrice) / book.price) * 100)
-            : 0;
+    const discount = discountPercent(book.price, book.finalPrice);
 
     const details = [
         { label: "Author", value: book.author },

@@ -1,9 +1,10 @@
 "use client";
 
+import LoginRequired from "./LoginRequired";
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { Heart, LoaderCircle, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,14 +12,12 @@ import { Badge } from "@/components/ui/badge";
 import { BookLoader } from "@/lib/BookLoader";
 import { getErrorMessage } from "@/lib/getErrorMessage";
 import { useAddToCartMutation, useGetWishlistQuery, useRemoveFromWishlistMutation } from "@/store/api";
-import { setLoginDialogOpen } from "@/store/slice/userSlice";
 import { RootState } from "@/store/store";
 import NoData from "@/app/components/NoData";
 
 type Busy = { id: string; action: "move" | "remove" } | null;
 
 export default function WishlistContent() {
-    const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user.user);
     const { data, isLoading, isError } = useGetWishlistQuery(undefined, { skip: !user });
     const [addToCart] = useAddToCartMutation();
@@ -27,13 +26,7 @@ export default function WishlistContent() {
 
     if (!user) {
         return (
-            <div className="space-y-4 rounded-lg border bg-white p-8 text-center shadow-sm">
-                <h1 className="text-2xl font-bold">My wishlist</h1>
-                <p className="text-gray-600">Log in to see the books you&apos;ve saved.</p>
-                <Button onClick={() => dispatch(setLoginDialogOpen(true))} className="normal-case tracking-normal">
-                    Log in / Sign up
-                </Button>
-            </div>
+            <LoginRequired title="My wishlist" message="Log in to see the books you've saved." />
         );
     }
 
