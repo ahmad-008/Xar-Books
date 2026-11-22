@@ -12,6 +12,18 @@ const toNumber = (value: unknown) =>
 
 const text = (value: FormDataEntryValue | null) => (typeof value === "string" ? value : undefined);
 
+const checkPrices = (price: number, finalPrice: number, shippingCharge: number) => {
+    if(price < 0.5 || price > 10000 || finalPrice < 0.5 || finalPrice > 10000){
+        throw new AppError("Prices must be between $0.50 and $10,000",400);
+    }
+    if (shippingCharge < 0 || shippingCharge > 100) {
+        throw new AppError("Shipping must be between $0 and $100", 400);
+    }
+    if (finalPrice > price) {
+        throw new AppError("Selling price can't be higher than the original price", 400);
+    }
+};
+
 export const createProduct = async (req: NextRequest) => {
     const user = await User.findById(await requireUserId(req));
     if (!user) {
@@ -29,7 +41,7 @@ export const createProduct = async (req: NextRequest) => {
         throw new AppError("Invalid form data", 400);
     }
 
-    const files = readImages(formData);
+    const files = await readImages(formData);
     if (files.length === 0) {
         throw new AppError("Add at least one image", 400);
     }
@@ -42,9 +54,8 @@ export const createProduct = async (req: NextRequest) => {
         throw new AppError("Price, selling price and shipping must be numbers", 400);
     }
 
-    if (finalPrice > price) {
-        throw new AppError("Selling price can't be higher than the original price", 400);
-    }
+        checkPrices(price, finalPrice, shippingCharge);
+
 
     const data = {
         title: text(formData.get("title")),
@@ -206,9 +217,7 @@ export const updateProduct = async (req: NextRequest, { id }: Params) => {
         product.set(field, value);
     }
 
-    if (product.finalPrice > product.price) {
-        throw new AppError("Selling price can't be higher than the original price", 400);
-    }
+    checkPrices(product.price, product.finalPrice, product.shippingCharge);
 
     await product.save();
 
@@ -264,7 +273,7 @@ export const updateProductImages = async (req: NextRequest, { id }: Params) => {
                 throw new AppError("One of the photos doesn't belong to this book", 400);
             }
         } else {
-            checkImage(photo);
+         await checkImage(photo);
         }
     }
 

@@ -64,7 +64,7 @@ export const updateAvatar = async (req: NextRequest) => {
         throw new AppError("Invalid form data", 400);
     }
 
-    const files = readImages(formData);
+    const files = await readImages(formData);
     if (files.length !== 1){
         throw new AppError("Choose one image",400);
     }
