@@ -129,4 +129,10 @@ const productSchema = new Schema<IProduct>(
     { timestamps: true }
 );
 
+productSchema.index(
+    { title: "text", author: "text", subject: "text" },
+    { name: "product_search", weights: { title: 5, author: 3, subject: 1 } }
+);
+productSchema.index({isSold: 1, createdAt: -1});
+productSchema.index({isSold: 1, finalPrice: 1});
 export const Product = (models.Product as Model<IProduct> | undefined) ?? model<IProduct>("Product", productSchema);
