@@ -29,6 +29,13 @@ export interface AdminStats{
         paymentMethod: "COD" | "Card";
         createdAt: string;
     }[];
+    recentUsers: {
+        _id: string;
+        name: string;
+        email: string;
+        role: "user" | "admin";
+        createdAt: string;
+    }[];
 }
 
 interface AdminStatsResponse {
