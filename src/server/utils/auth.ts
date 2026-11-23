@@ -55,3 +55,12 @@ export const requireUserId = async (req: NextRequest) => {
 
     return payload.userId;
 };
+
+export const requireAdmin = async (req: NextRequest) => {
+    const userId = await requireUserId(req);
+    const user = await User.findById(userId).select("role");
+    if(user?.role !== "admin"){
+        throw new AppError("Only admins can do this", 403);
+    }
+    return userId;
+};

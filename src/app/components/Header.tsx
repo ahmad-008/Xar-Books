@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { logout  , setLoginDialogOpen } from '@/store/slice/userSlice';
 import { RootState } from '@/store/store';
-import { BookLock, ChevronRight, FileTerminal, Heart, HelpCircle, Lock, LogOut, Menu, Package, PiggyBank, Receipt, Search, ShoppingCart, Store, User, User2 } from 'lucide-react';
+import { BookLock, ChevronRight, FileTerminal, Heart, HelpCircle, Lock, LogOut, Menu, Package, PiggyBank, Receipt, Search, ShoppingCart, Store, User, User2, LayoutDashboard, } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -128,6 +128,15 @@ const Header = () => {
       }
     ]
     ),
+
+    ...(user?.role === "admin"? [
+      {
+        icon: <LayoutDashboard className='h-5 w-5' />,
+        label: "Admin Dashboard",
+        href: '/admin',
+      }
+    ]: []),
+
     {
       icon: <Store className='h-5 w-5 ' />,
       label: "Sell Books",

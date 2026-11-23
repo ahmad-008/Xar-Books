@@ -14,6 +14,20 @@ export interface User {
     profilePicture?: string;
 }
 
+export interface AdminStats{
+    users: number;
+    booksForSale: number;
+    booksSold: number;
+    orders: number;
+    ordersByStatus:Record<"processing" | "shipped" | "delivered" | "cancelled", number>;
+    revenue: number;
+}
+
+interface AdminStatsResponse {
+    success: boolean;
+    data: AdminStats;
+}
+
 interface AuthResponse {
     success: boolean;
     message?: string;
@@ -287,6 +301,11 @@ export const api = createApi({
             invalidatesTags: ["Cart", "Product", "Order"],
         }),
 
+        getAdminStats: builder.query<AdminStatsResponse, void>({
+            query: () => "/admin/stats",
+            providesTags:["Order", "Product", "User"],
+        }),
+
         getMyOrders: builder.query<OrderListResponse, void>({
             query: () => "/orders",
             providesTags: ["Order"],
@@ -354,6 +373,7 @@ export const api = createApi({
 });
 
 export const {
+    useGetAdminStatsQuery,
     useRegisterMutation,
     useLoginMutation,
     useLogoutMutation,
