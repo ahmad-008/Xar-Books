@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "make-admin": "node --env-file=.env.local scripts/make-admin.mjs"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.13.0",
