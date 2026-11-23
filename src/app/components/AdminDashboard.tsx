@@ -129,6 +129,39 @@ export default function AdminDashboard() {
                 </CardContent>
             </Card>
 
+                        
+
+            <Card className="gap-0 py-0 shadow-sm">
+                <CardContent className="space-y-3 p-5">
+                    <h2 className="font-semibold">New users</h2>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm">
+                            <thead className="text-muted-foreground">
+                                <tr className="border-b">
+                                    <th className="py-2 pr-4 font-medium">Name</th>
+                                    <th className="py-2 pr-4 font-medium">Email</th>
+                                    <th className="py-2 pr-4 font-medium">Role</th>
+                                    <th className="py-2 font-medium">Joined</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {stats.recentUsers.map((u) => (
+                                    <tr key={u._id} className="border-b last:border-0">
+                                        <td className="py-2 pr-4 font-medium">{u.name}</td>
+                                        <td className="py-2 pr-4">{u.email}</td>
+                                        <td className="py-2 pr-4">
+                                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${u.role === "admin" ? "bg-orange-100 text-orange-700" : "bg-gray-100 text-gray-700"}`}>
+                                                {u.role}
+                                            </span>
+                                        </td>
+                                        <td className="py-2">{new Date(u.createdAt).toLocaleDateString()}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     );
 
