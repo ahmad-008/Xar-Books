@@ -6,10 +6,14 @@ export async function register() {
     connectDB().catch((error) => console.error("Database warm-up failed:", error.message));
 
     const {cancelStaleCodOrders} = await import("./server/jobs/cancelStaleCodOrders");
+    const {autoConfirmDelivery} = await import("./server/jobs/autoConfirmDelivery");
     const runJob = () => 
         cancelStaleCodOrders()
         .then((count) => count > 0 && console.log(`Auto-cancelled ${count} old cash-on-delivery order(s)`))
-        .catch((error) => console.error("Auto-cancel failed:", error.message));
+        .catch((error) => console.error("Auto-cancel failed:", error.message))
+        .then(()=> autoConfirmDelivery())
+        .then((count)=> count > 0 && console.log(`Auto-confirmed ${count} delivered order(s)`))
+        .catch((error)=> console.error("Auto-confirm failed:", error.message));
 
         runJob();
         setInterval(runJob, 60 * 60 * 1000);

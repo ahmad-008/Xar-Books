@@ -331,6 +331,9 @@ export const updateSellingStatus = async (req: NextRequest, { id }: Params) => {
         item.status = status;
     });
     order.orderStatus = overallStatus(order.items);
+    if (order.orderStatus === "shipped" && !order.shippedAt){
+        order.shippedAt = new Date();
+    }
     await order.save();
 
     return NextResponse.json({
