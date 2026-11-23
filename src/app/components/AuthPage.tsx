@@ -21,6 +21,7 @@ import toast from "react-hot-toast";
 import { useForgotPasswordMutation, useLoginMutation, useRegisterMutation } from "@/store/api";
 import { authStatus, setUser } from "@/store/slice/userSlice";
 import { getErrorMessage } from "@/lib/getErrorMessage";
+import { useRouter } from "next/navigation";
 
 
 
@@ -57,6 +58,7 @@ const AuthPage = ({ isLoginOpen, setIsLoginOpen }: AuthPageProps) => {
     const [showPassword, setShowPassword] = useState(false);
 
     const dispatch = useDispatch();
+    const router = useRouter();
     const [login, {isLoading: loginLoading}] = useLoginMutation();
 
     const {
@@ -72,8 +74,10 @@ const AuthPage = ({ isLoginOpen, setIsLoginOpen }: AuthPageProps) => {
             const result = await login(data).unwrap();
             dispatch(setUser(result.data));
             dispatch(authStatus());
-            toast.success("Logged in successfully");
+            const isAdmin = result.data.role === "admin";
+            toast.success(isAdmin ? "Logged in as admin" : "Logged in successfully");
             handleOpenChange(false);
+            if (isAdmin) router.push("/admin");
         } catch (error) {
             toast.error(getErrorMessage(error));
         }

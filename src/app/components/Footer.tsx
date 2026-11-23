@@ -93,8 +93,7 @@ function Footer() {
           </div>
         </div>
 
-        <div className='mt-12 flex flex-col items-center justify-between gap-4
-        border-t border-gray-700 pt-8 md:flex-row' >
+        <div className='mt-12 flex flex-col items-center justify-between gap-4 border-t border-gray-700 pt-8 md:flex-row' >
 
           <p className='text-sm' >
               &copy; {new Date().getFullYear()} Xar Books. All rights reserved.

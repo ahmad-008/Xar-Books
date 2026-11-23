@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { logout  , setLoginDialogOpen } from '@/store/slice/userSlice';
+import { logout, setLoginDialogOpen } from '@/store/slice/userSlice';
 import { RootState } from '@/store/store';
 import { BookLock, ChevronRight, FileTerminal, Heart, HelpCircle, Lock, LogOut, Menu, Package, PiggyBank, Receipt, Search, ShoppingCart, Store, User, User2, LayoutDashboard, } from 'lucide-react';
 import Image from 'next/image';
@@ -43,16 +43,17 @@ const Header = () => {
   const isLoginDialogOpen = useSelector((state: RootState) => state.user.isLoginDialogOpen)
 
   const user = useSelector((state: RootState) => state.user.user)
+  const isAdmin = user?.role === "admin"
 
 
 
   const userPlacholder = user?.name
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .slice(0,2)
-      .toUpperCase() ?? "";
-  
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase() ?? "";
+
 
 
 
@@ -80,20 +81,20 @@ const Header = () => {
   }
 
   const [logoutUser] = useLogoutMutation()
-  const {data: cart} = useGetCartQuery(undefined,{skip: !user})
+  const { data: cart } = useGetCartQuery(undefined, { skip: !user || isAdmin })
   const cartCount = cart?.data.length ?? 0
 
   const handleLogout = async () => {
-      try{
-        await logoutUser().unwrap()
-        dispatch(logout())
-        dispatch(api.util.resetApiState())
-        toast.success("Logged out")
-        router.push('/')
+    try {
+      await logoutUser().unwrap()
+      dispatch(logout())
+      dispatch(api.util.resetApiState())
+      toast.success("Logged out")
+      router.push('/')
 
-      } catch {
-        toast.error("Could not log out, please try again")
-      }
+    } catch {
+      toast.error("Could not log out, please try again")
+    }
   }
 
   const menuItems = [
@@ -104,7 +105,7 @@ const Header = () => {
           <div className='flex space-x-4 items-center p-2 border-b' >
             <Avatar className='w-12 h-12 -ml-2 rounded-full' >
               {user?.profilePicture ? (
-                <AvatarImage src={user.profilePicture}  alt={user.name}/>
+                <AvatarImage src={user.profilePicture} alt={user.name} />
               ) : (
                 <AvatarFallback>{userPlacholder}</AvatarFallback>
               )}
@@ -129,13 +130,18 @@ const Header = () => {
     ]
     ),
 
-    ...(user?.role === "admin"? [
+    ...(isAdmin ? [
       {
         icon: <LayoutDashboard className='h-5 w-5' />,
         label: "Admin Dashboard",
         href: '/admin',
-      }
-    ]: []),
+      },
+      {
+        icon: <User className='h-5 w-5'/>,
+        label: "My Profile",
+        href: '/account/profile',
+      },
+    ] : [
 
     {
       icon: <Store className='h-5 w-5 ' />,
@@ -171,7 +177,7 @@ const Header = () => {
       icon: <Heart className='h-5 w-5 ' />,
       label: "My Wishlist",
       onclick: () => handleProtectionNavigation('/account/wishlist'),
-    },
+    }, ]),
     {
       icon: <User2 className='h-5 w-5 ' />,
       label: "About Us",
@@ -203,7 +209,7 @@ const Header = () => {
 
   ]
 
-  const renderMenuItems= (className="") => (
+  const renderMenuItems = (className = "") => (
     <div className={className} >
       {menuItems?.map((item, index) =>
         item?.href ? (
@@ -248,8 +254,7 @@ const Header = () => {
   return (
     <header className='border-b bg-white sticky top-0 z-50' >
       {/*Desktop header*/}
-      <div className='container w-[80%] mx-auto hidden lg:flex items-center
-       justify-between p-4'>
+      <div className='container w-[80%] mx-auto hidden lg:flex items-center justify-between p-4'>
 
         <Link href='/' className='flex items-center' >
           <Image
@@ -287,16 +292,19 @@ const Header = () => {
         </div>
 
         <div className='flex items-center gap-4'>
-          <Button asChild variant='secondary' className='normal-case tracking-normal bg-red-400 text-white hover:bg-red-500 rounded' >
-            <Link href='/book-sell'>Sell Books</Link>
-          </Button>
+          {!isAdmin && (
+            <Button asChild variant='secondary' className='normal-case tracking-normal bg-red-400 text-white hover:bg-red-500 rounded' >
+              <Link href='/book-sell'>Sell Books</Link>
+            </Button>
+          )}
+
 
           <DropdownMenu open={isDropDownOpen} onOpenChange={setIsDropDownOpen}>
             <DropdownMenuTrigger asChild>
               <Button variant='ghost' className='normal-case tracking-normal' >
                 <Avatar className='w-8 h-8 rounded-full' >
                   {user?.profilePicture ? (
-                    <AvatarImage src={user.profilePicture}  alt={user.name}/>
+                    <AvatarImage src={user.profilePicture} alt={user.name} />
                   ) : userPlacholder ? (
                     <AvatarFallback>{userPlacholder}</AvatarFallback>
                   ) : (
@@ -305,7 +313,7 @@ const Header = () => {
 
 
                 </Avatar>
-                My Account
+                {isAdmin ? "Admin" : "My Account"}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className='w-80 p-2' >
@@ -313,15 +321,21 @@ const Header = () => {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button asChild variant='ghost' className='relative normal-case tracking-normal'>
-            <Link href='/checkout/cart'>
-              <ShoppingCart className='h-5 w-5 mr-2' />
-              Cart
-              {cartCount > 0 && (
-                <span className='absolute top-2 left-7 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full px-1 text-xs' >{cartCount}</span>
-              )}
-            </Link>
-          </Button>
+          {!isAdmin && (
+            <Button asChild variant='ghost' className='relative normal-case tracking-normal'>
+              <Link href='/checkout/cart'>
+                <ShoppingCart className='h-5 w-5 mr-2' />
+                Cart
+                {cartCount > 0 && (
+                  <span className='absolute top-2 left-7 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full px-1 text-xs' >{cartCount}</span>
+                )}
+              </Link>
+            </Button>
+
+          )
+
+          }
+
 
 
 
@@ -403,15 +417,16 @@ const Header = () => {
 
         </div>
 
-
-        <Button asChild variant='ghost' className='relative normal-case tracking-normal'>
-          <Link href='/checkout/cart' aria-label='Cart'>
-            <ShoppingCart className='h-5 w-5 mr-2' />
-            {cartCount > 0 && (
-              <span className='absolute top-2 left-7 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full px-1 text-xs' >{cartCount}</span>
-            )}
-          </Link>
-        </Button>
+        {!isAdmin && (
+          <Button asChild variant='ghost' className='relative normal-case tracking-normal'>
+            <Link href='/checkout/cart' aria-label='Cart'>
+              <ShoppingCart className='h-5 w-5 mr-2' />
+              {cartCount > 0 && (
+                <span className='absolute top-2 left-7 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full px-1 text-xs' >{cartCount}</span>
+              )}
+            </Link>
+          </Button>
+        )}
 
       </div>
 

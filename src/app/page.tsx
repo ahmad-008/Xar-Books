@@ -187,14 +187,12 @@ export default function Home() {
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8 relative" >
-            <div className="hidden md:block absolute top-1/2 left-1/4 right-1/4 h-0.5 
-                border-t-2 border-dashed border-gray-300 -z-10" />
+            <div className="hidden md:block absolute top-1/2 left-1/4 right-1/4 h-0.5 border-t-2 border-dashed border-gray-300 -z-10" />
 
             {sellSteps.map((step, index) => (
               <div key={index} className="relative flex flex-col h-full" >
                 <div className="bg-white rounded-xl p-8 shadow-lg text-center grow flex flex-col" >
-                  <div className="absolute top-2 left-14 translate-x-1/2 bg-yellow-400 text-gray-900 px-4 py-1 
-                            rounded-full text-sm font-medium z-10" >
+                  <div className="absolute top-2 left-14 translate-x-1/2 bg-yellow-400 text-gray-900 px-4 py-1 rounded-full text-sm font-medium z-10" >
                     {step.step}
                   </div>
 
@@ -222,14 +220,12 @@ export default function Home() {
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8 relative" >
-            <div className="hidden md:block absolute top-1/2 left-1/4 right-1/4 h-0.5 
-                border-t-2 border-dashed border-gray-300 -z-10" />
+            <div className="hidden md:block absolute top-1/2 left-1/4 right-1/4 h-0.5 border-t-2 border-dashed border-gray-300 -z-10" />
 
             {buySteps.map((step, index) => (
               <div key={index} className="relative flex flex-col h-full" >
                 <div className="bg-yellow-400 rounded-xl p-8 shadow-lg text-center grow flex flex-col" >
-                  <div className="absolute top-2 left-14 translate-x-1/2 bg-white text-gray-900 px-4 py-1 
-                            rounded-full text-sm font-medium z-10" >
+                  <div className="absolute top-2 left-14 translate-x-1/2 bg-white text-gray-900 px-4 py-1 rounded-full text-sm font-medium z-10" >
                     {step.step}
                   </div>
 
