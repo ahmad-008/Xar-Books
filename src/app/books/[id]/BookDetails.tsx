@@ -167,10 +167,7 @@ const BookDetailsPage = () => {
                                 <button
                                     key={image}
                                     onClick={() => setSelectedImage(index)}
-                                    className={`relative h-20 w-20 overflow-hidden rounded-lg border-2 transition
-                                        ${selectedImage === index ? "border-orange-500"
-                                            : "border-transparent opacity-60 hover:opacity-100"
-                                        } `}
+                                    className={`relative h-20 w-20 overflow-hidden rounded-lg border-2 transition ${selectedImage === index ? "border-orange-500" : "border-transparent opacity-60 hover:opacity-100" } `}
                                 >
                                     <Image
                                         src={image}
