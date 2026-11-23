@@ -40,6 +40,7 @@ export interface IOrder {
     orderStatus: (typeof ORDER_STATUSES)[number];
     stripeSessionId?: string;
     paymentIntentId?: string;
+    shippedAt?: Date;
     createdAt: Date;
 }
 
@@ -88,6 +89,7 @@ const orderSchema = new Schema<IOrder>({
         orderStatus: { type: String, enum: ORDER_STATUSES, default: "processing" },
         stripeSessionId: { type: String, index: true, sparse: true },
         paymentIntentId: { type: String },
+        shippedAt: {type: Date},
 
 },
     {timestamps : true}
