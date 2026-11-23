@@ -7,7 +7,7 @@ import { requireAdmin } from "../utils/auth";
 export const getStats = async (req: NextRequest) => {
     await requireAdmin(req);
 
-    const [users, booksForSale, booksSold, statusCounts, paid] = await Promise.all([
+    const [users, booksForSale, booksSold, statusCounts, paid, recentOrders] = await Promise.all([
         User.countDocuments(),
         Product.countDocuments({ isSold: false }),
         Product.countDocuments({ isSold: true }),
@@ -16,6 +16,10 @@ export const getStats = async (req: NextRequest) => {
             { $match: { paymentStatus: "paid" } },
             { $group: { _id: null, total: { $sum: "$totalAmount" } } },
         ]),
+        Order.find()
+        .sort({createdAt: -1})
+        .limit(10).select("buyer totalAmount orderStatus paymentMethod createdAt")
+        .populate("buyer", "name email").lean(),
     ]);
 
     const ordersByStatus = { processing: 0, shipped: 0, delivered: 0, cancelled: 0 };
@@ -32,6 +36,7 @@ export const getStats = async (req: NextRequest) => {
             orders: Object.values(ordersByStatus).reduce((sum, n) => sum + n, 0),
             ordersByStatus,
             revenue: paid[0]?.total ?? 0,
+            recentOrders,
         },
     });
 };

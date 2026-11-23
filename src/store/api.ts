@@ -21,6 +21,14 @@ export interface AdminStats{
     orders: number;
     ordersByStatus:Record<"processing" | "shipped" | "delivered" | "cancelled", number>;
     revenue: number;
+    recentOrders: {
+        _id: string;
+        buyer: {name: string; email: string} | null;
+        totalAmount: number;
+        orderStatus: "processing" | "shipped" |"delivered" | "cancelled";
+        paymentMethod: "COD" | "Card";
+        createdAt: string;
+    }[];
 }
 
 interface AdminStatsResponse {
