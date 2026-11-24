@@ -321,6 +321,11 @@ export const api = createApi({
             providesTags:["Order", "Product", "User"],
         }),
 
+        removeProduct: builder.mutation<MessageResponse,string>({
+            query: (id) => ({url: `/admin/products/${id}`, method: "DELETE"}),
+            invalidatesTags: ["Product"],
+        }),
+
         getMyOrders: builder.query<OrderListResponse, void>({
             query: () => "/orders",
             providesTags: ["Order"],
@@ -389,6 +394,7 @@ export const api = createApi({
 
 export const {
     useGetAdminStatsQuery,
+    useRemoveProductMutation,
     useRegisterMutation,
     useLoginMutation,
     useLogoutMutation,

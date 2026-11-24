@@ -2,20 +2,39 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, LogOut, Store } from "lucide-react";
+import { BookOpen, LayoutDashboard, LogOut, Store } from "lucide-react";
 import { useAdminArea } from "@/lib/useAdminArea";
 import { useLogout } from "@/lib/useLogout";
+import NoData from "./NoData";
+import LoginRequired from "./LoginRequired";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
-const ADMIN_LINKS = [{ href: "/admin", label: "Dashboard", icon: LayoutDashboard }];
-
+const ADMIN_LINKS = [
+    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/books", label: "Books", icon: BookOpen },
+];
 const ITEM = "flex shrink-0 items-center gap-3 rounded-lg px-3 py-2 text-sm transition";
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const user = useSelector((state: RootState) => state.user.user);
     const isAdminArea = useAdminArea();
     const handleLogout = useLogout();
 
-    if (!isAdminArea) return <main>{children}</main>;
+     if (!isAdminArea) {
+        return (
+            <main className="mx-auto max-w-5xl px-4 py-10">
+                {user ? (
+                    <NoData message="Admins only" description="Your account doesn't have access to this page." />
+                ) : (
+                    <LoginRequired title="Admin" message="Log in with an admin account to see this page." />
+                )
+
+                }
+            </main>
+        );
+     }
 
     return (
         <div className="flex min-h-screen flex-col bg-gray-50 md:flex-row">

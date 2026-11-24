@@ -219,7 +219,7 @@ export const updateProduct = async (req: NextRequest, { id }: Params) => {
     return NextResponse.json({ success: true, message: "Book updated", data: product });
 };
 
-const deleteImages = async (urls: string[]) => {
+export const deleteImages = async (urls: string[]) => {
     const results = await Promise.allSettled(urls.map(deleteImage));
     results.forEach((result)=>{
         if(result.status === "rejected")
