@@ -3,6 +3,12 @@ import { Order } from "../models/Order";
 import { Product } from "../models/Product";
 import { User } from "../models/User";
 import { requireAdmin } from "../utils/auth";
+import { isValidObjectId } from "mongoose";
+import { AppError } from "../utils/AppError";
+import { Params } from "../utils/http";
+import { deleteImages } from "./product.controller";
+
+
 
 export const getStats = async (req: NextRequest) => {
     await requireAdmin(req);
@@ -44,3 +50,23 @@ export const getStats = async (req: NextRequest) => {
         },
     });
 };
+
+export const removeProduct = async (req: NextRequest, {id}: Params) => {
+    await requireAdmin(req);
+
+    if(!isValidObjectId(id)){
+        throw new AppError("Book not found", 404);
+    }
+
+    const product = await Product.findOneAndDelete({_id: id, isSold: false});
+    if(!product){
+        throw new AppError("This book was sold or already removed", 404);
+    }
+
+    await deleteImages(product.images);
+
+    return NextResponse.json({
+        success: true, 
+        message: "Listing removed"
+    });
+}
