@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { logout, setLoginDialogOpen } from '@/store/slice/userSlice';
+import { setLoginDialogOpen } from '@/store/slice/userSlice';
 import { RootState } from '@/store/store';
 import { BookLock, ChevronRight, FileTerminal, Heart, HelpCircle, Lock, LogOut, Menu, Package, PiggyBank, Receipt, Search, ShoppingCart, Store, User, User2, LayoutDashboard, } from 'lucide-react';
 import Image from 'next/image';
@@ -15,8 +15,9 @@ import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import AuthPage from './AuthPage';
 import NavBar from './NavBar';
-import toast from 'react-hot-toast';
-import { api, useGetCartQuery, useLogoutMutation } from '@/store/api';
+import { useGetCartQuery} from '@/store/api';
+import { useLogout } from '@/lib/useLogout';
+import { useAdminArea } from '@/lib/useAdminArea';
 
 
 
@@ -80,22 +81,11 @@ const Header = () => {
 
   }
 
-  const [logoutUser] = useLogoutMutation()
+  const handleLogout = useLogout()
+  const isAdminArea = useAdminArea()
   const { data: cart } = useGetCartQuery(undefined, { skip: !user || isAdmin })
   const cartCount = cart?.data.length ?? 0
 
-  const handleLogout = async () => {
-    try {
-      await logoutUser().unwrap()
-      dispatch(logout())
-      dispatch(api.util.resetApiState())
-      toast.success("Logged out")
-      router.push('/')
-
-    } catch {
-      toast.error("Could not log out, please try again")
-    }
-  }
 
   const menuItems = [
     ...(user ? [
@@ -250,6 +240,7 @@ const Header = () => {
     </div>
   )
 
+  if (isAdminArea) return null
 
   return (
     <header className='border-b bg-white sticky top-0 z-50' >
