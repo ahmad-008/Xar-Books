@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Order } from "../models/Order";
+import { Order, ORDER_STATUSES } from "../models/Order";
 import { Product } from "../models/Product";
 import { User } from "../models/User";
 import { requireAdmin } from "../utils/auth";
@@ -70,3 +70,43 @@ export const removeProduct = async (req: NextRequest, {id}: Params) => {
         message: "Listing removed"
     });
 }
+
+export const getOrders = async (req: NextRequest) => {
+    await requireAdmin(req);
+    const query= req.nextUrl.searchParams;
+    const filter: Record<string, unknown> = {};
+
+    const status = query.get("status");
+    if (status && (ORDER_STATUSES as readonly string[]).includes(status)){
+        filter.orderStatus = status;
+    }
+
+    const email = (query.get("email") ?? "").trim().toLowerCase();
+    if(email){
+        const buyer = await User.findOne({email}).select("_id");
+        filter.buyer = buyer?._id ?? null;
+    }
+
+    const page = Math.max(1, Math.floor(Number(query.get("page"))) || 1);
+    const limit = 10;
+
+    const [orders, total] = await Promise.all([
+        Order.find(filter)
+        .sort({createdAt: -1})
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .select("buyer items totalAmount paymentMethod paymentStatus orderStatus createdAt shippingAddress.fullName shippingAddress.city shippingAddress.country")
+        .populate("buyer","name email")
+        .populate("items.seller", "name")
+        .lean(),
+     
+        Order.countDocuments(filter),
+    ]);
+
+    return NextResponse.json({
+        success: true,
+        data: orders,
+        pagination: {page, limit, total, pages:Math.ceil(total / limit)},
+    });
+
+};

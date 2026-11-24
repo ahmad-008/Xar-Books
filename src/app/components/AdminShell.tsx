@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, LayoutDashboard, LogOut, Store } from "lucide-react";
+import { BookOpen, LayoutDashboard, LogOut, Store, Package } from "lucide-react";
 import { useAdminArea } from "@/lib/useAdminArea";
 import { useLogout } from "@/lib/useLogout";
 import NoData from "./NoData";
@@ -13,6 +13,7 @@ import { RootState } from "@/store/store";
 const ADMIN_LINKS = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/books", label: "Books", icon: BookOpen },
+    { href: "/admin/orders", label: "Orders", icon: Package },
 ];
 const ITEM = "flex shrink-0 items-center gap-3 rounded-lg px-3 py-2 text-sm transition";
 

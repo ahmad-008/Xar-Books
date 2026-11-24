@@ -143,6 +143,18 @@ export interface Order {
     createdAt: string;
 }
 
+export interface AdminOrder extends Omit<Order, "items">{
+    buyer: {name: string; email: string} | null;
+    items: (Omit<OrderItem, "seller"> & {seller: {name: string} | null})[];
+}
+
+interface AdminOrdersResponse{
+    success: boolean;
+    data: AdminOrder[];
+    pagination: { page: number; limit: number; total: number; pages: number };
+}
+
+
 interface OrderResponse {
     success: boolean;
     message?: string;
@@ -326,6 +338,16 @@ export const api = createApi({
             invalidatesTags: ["Product"],
         }),
 
+        getAdminOrders: builder.query<AdminOrdersResponse, { status: string; email: string; page: number }>({
+            query: ({ status, email, page }) => {
+                const params = new URLSearchParams({ page: String(page) });
+                if (status) params.set("status", status);
+                if (email) params.set("email", email);
+                return `/admin/orders?${params}`;
+            },
+            providesTags: ["Order"],
+        }),
+
         getMyOrders: builder.query<OrderListResponse, void>({
             query: () => "/orders",
             providesTags: ["Order"],
@@ -395,6 +417,7 @@ export const api = createApi({
 export const {
     useGetAdminStatsQuery,
     useRemoveProductMutation,
+    useGetAdminOrdersQuery,
     useRegisterMutation,
     useLoginMutation,
     useLogoutMutation,
