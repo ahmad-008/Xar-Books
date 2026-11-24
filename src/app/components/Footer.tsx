@@ -1,4 +1,7 @@
+"use client";
+
 import Link from 'next/link';
+import { useAdminArea } from '@/lib/useAdminArea';
 import { FaFacebook, FaInstagram, FaXTwitter, FaYoutube } from 'react-icons/fa6';
 import { FaCcAmex, FaCcMastercard, FaCcStripe, FaCcVisa } from 'react-icons/fa';
 
@@ -6,6 +9,7 @@ import { FaCcAmex, FaCcMastercard, FaCcStripe, FaCcVisa } from 'react-icons/fa';
 
 
 function Footer() {
+  const isAdminArea = useAdminArea();
 
   const footerLinks = [
     {
@@ -43,6 +47,7 @@ function Footer() {
   const paymentIcons = [FaCcVisa, FaCcMastercard, FaCcAmex, FaCcStripe];
 
 
+  if (isAdminArea) return null;
 
   return (
     <footer className='bg-gray-900 text-gray-300' >
