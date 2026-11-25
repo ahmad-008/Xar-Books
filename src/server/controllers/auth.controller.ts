@@ -84,6 +84,10 @@ export const login = async (req: NextRequest) => {
     if (!user || !isPasswordCorrect) {
         throw new AppError("Invalid email or password", 401);
     }
+
+    if (user.isBlocked) {
+        throw new AppError("Your account has been blocked", 403);
+    }
     
     await clearRateLimit(limitKey);
     const res = NextResponse.json({ success: true, message: "Logged In", data: toPublicUser(user) });

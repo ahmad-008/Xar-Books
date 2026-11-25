@@ -15,6 +15,7 @@ export interface IUser {
     passwordResetToken?: string;
     passwordResetExpires?: Date;
     tokenVersion: number;
+    isBlocked: boolean;
 }
 
 const userSchema = new Schema<IUser>(
@@ -56,6 +57,7 @@ const userSchema = new Schema<IUser>(
         passwordResetToken: { type: String, select: false },
         passwordResetExpires: { type: Date, select: false },
         tokenVersion: {type: Number,default: 0, select: false},
+        isBlocked: { type: Boolean, default: false },
     },
     {timestamps: true}
 );

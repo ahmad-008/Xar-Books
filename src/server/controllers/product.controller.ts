@@ -7,6 +7,7 @@ import { requireUserId } from "../utils/auth";
 import { Params, readJson } from "../utils/http";
 import { checkPrices } from "../utils/validate";
 import { MAX_FILES, checkImage, deleteImage, readImages, uploadImage } from "../utils/uploadImage";
+import { blockedUserIds } from "../utils/blockedUsers";
 
 const toNumber = (value: unknown) =>
     typeof value === "string" && value.trim() !== "" ? Number(value) : NaN;
@@ -73,13 +74,13 @@ export const createProduct = async (req: NextRequest) => {
     );
 };
 
-const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+export const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const toList = (values: string[]) => values.filter((item) => item.trim() !== "");
 
 export const getProducts = async (req: NextRequest) => {
     const query = req.nextUrl.searchParams;
-    const filter: Record<string, unknown> = { isSold: false };
+    const filter: Record<string, unknown> = { isSold: false, seller: {$nin: await blockedUserIds()} };
 
 
     const categories = toList(query.getAll("category"));

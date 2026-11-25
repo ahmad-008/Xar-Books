@@ -8,6 +8,7 @@ import { AppError } from "../utils/AppError";
 import { requireUserId } from "../utils/auth";
 import { Params, appUrl, readJson } from "../utils/http";
 import { cancelOrderByBuyer, createCheckoutSession, releaseOrder, syncCheckout } from "../utils/orderPayment";
+import { blockedUserIds } from "../utils/blockedUsers";
 
 const ADDRESS_FIELDS = [
     "fullName",
@@ -82,13 +83,15 @@ export const createOrder = async (req: NextRequest) => {
         }
     }
 
+    const blocked = await blockedUserIds();
+
     const order = await mongoose.connection.transaction(async (session) => {
         const cart = await Cart.findOne({ user: userId }).session(session);
 
         const products = await Product.find({
             _id: { $in: cart?.items ?? [] },
             isSold: false,
-            seller: { $ne: userId },
+            seller: { $nin: [userId, ...blocked] },
         }).session(session);
 
         if (products.length === 0) {
