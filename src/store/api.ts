@@ -154,6 +154,21 @@ interface AdminOrdersResponse{
     pagination: { page: number; limit: number; total: number; pages: number };
 }
 
+export interface AdminUser{
+    _id: string;
+    name: string;
+    email: string;
+    role: "user" | "admin";
+    isEmailVerified: boolean;
+    isBlocked?: boolean;
+    createdAt: string;
+}
+
+interface AdminUsersResponse{
+    success: boolean;
+    data: AdminUser[];
+    pagination: { page: number; limit: number; total: number; pages: number };
+}
 
 interface OrderResponse {
     success: boolean;
@@ -348,6 +363,20 @@ export const api = createApi({
             providesTags: ["Order"],
         }),
 
+        getAdminUsers: builder.query<AdminUsersResponse, {search: string; page: number}>({
+            query: ({search, page}) => {
+                const params = new URLSearchParams({page: String(page)});
+                if (search) params.set("search", search);
+                return `/admin/users?${params}`;
+            },
+            providesTags: ["User"],
+        }),
+
+        setUserBlocked:builder.mutation<MessageResponse, {id: string; blocked: boolean}>({
+            query: ({id, blocked}) => ({url: `/admin/users/${id}`, method: "PATCH", body:{blocked}}),
+            invalidatesTags: ["User", "Product"],
+        }),
+
         getMyOrders: builder.query<OrderListResponse, void>({
             query: () => "/orders",
             providesTags: ["Order"],
@@ -418,6 +447,8 @@ export const {
     useGetAdminStatsQuery,
     useRemoveProductMutation,
     useGetAdminOrdersQuery,
+    useGetAdminUsersQuery,
+    useSetUserBlockedMutation,
     useRegisterMutation,
     useLoginMutation,
     useLogoutMutation,

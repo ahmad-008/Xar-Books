@@ -5,8 +5,8 @@ import { User } from "../models/User";
 import { requireAdmin } from "../utils/auth";
 import { isValidObjectId } from "mongoose";
 import { AppError } from "../utils/AppError";
-import { Params } from "../utils/http";
-import { deleteImages } from "./product.controller";
+import { Params, readJson } from "../utils/http";
+import { deleteImages, escapeRegex } from "./product.controller";
 
 
 
@@ -109,4 +109,54 @@ export const getOrders = async (req: NextRequest) => {
         pagination: {page, limit, total, pages:Math.ceil(total / limit)},
     });
 
+};
+
+export const getUsers = async (req: NextRequest) => {
+    await requireAdmin(req);
+    const query = req.nextUrl.searchParams;
+    const filter: Record<string, unknown> = {};
+
+    const search = (query.get("search") ?? "").trim().slice(0,100);
+    if (search){
+        const regex = new RegExp(escapeRegex(search), "i");
+        filter.$or = [{name: regex}, {email: regex}];
+    }
+
+    const page = Math.max(1, Math.floor(Number(query.get("page"))) || 1);
+    const limit = 10;
+
+    const [users, total] = await Promise.all([
+        User.find(filter)
+            .sort({createdAt: -1})
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .select("name email role isEmailVerified isBlocked createdAt")
+            .lean(),
+          User.countDocuments(filter),  
+    ]);
+
+    return NextResponse.json({
+        success: true,
+        data: users,
+        pagination: {page, limit, total, pages: Math.ceil(total /limit)},
+    });
+};
+
+export const setUserBlocked = async (req: NextRequest, {id}: Params) =>{
+    await requireAdmin(req);
+    const {blocked} = await readJson(req);
+
+    if(typeof blocked !== "boolean"){
+        throw new AppError("Choose block or unblock", 400);
+    }
+
+    if(!isValidObjectId(id)){
+        throw new AppError("User not found", 404);
+    }
+
+    const user= await User.findOneAndUpdate({_id: id, role: "user"},{$set: {isBlocked: blocked}});
+    if (!user){
+        throw new AppError("User not found, or is an admin", 404);
+    }
+     return NextResponse.json({ success: true, message: blocked ? "User blocked" : "User unblocked" });
 };

@@ -53,6 +53,10 @@ export const requireUserId = async (req: NextRequest) => {
         throw new AppError("Please log in to continue", 401);
     }
 
+    if (user.isBlocked) {
+        throw new AppError("Your account has been blocked", 401);
+    }
+
     return payload.userId;
 };
 
