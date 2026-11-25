@@ -9,6 +9,7 @@ import { useGetAdminStatsQuery } from "@/store/api";
 import { RootState } from "@/store/store";
 import LoginRequired from "./LoginRequired";
 import NoData from "./NoData";
+import SalesChart from "./SalesChart";
 
 export default function AdminDashboard() {
     const user = useSelector((state: RootState) => state.user.user);
@@ -67,6 +68,11 @@ export default function AdminDashboard() {
                 ))}
             </div>
 
+            <div className="grid gap-4 lg:grid-cols-2">
+                <SalesChart title="Revenue, last 30 days" days={stats.salesByDay} field="revenue" />
+                <SalesChart title="Orders, last 30 days" days={stats.salesByDay} field="orders" />
+            </div>
+
             <Card className="gap-0 py-0 shadow-sm">
                 <CardContent className="space-y-3 p-5">
                     <h2 className="font-semibold">Orders by status</h2>
@@ -108,7 +114,7 @@ export default function AdminDashboard() {
                                                 <p className="text-xs text-muted-foreground">{order.buyer?.email}</p>
                                             </td>
                                             <td className="py-2 pr-4">${order.totalAmount.toFixed(2)}</td>
-                                            <td className="py-2 pr-4">${order.paymentMethod}</td>
+                                            <td className="py-2 pr-4">{order.paymentMethod}</td>
                                             <td className="py-2 pr-4">
                                                 <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${STATUS_STYLES[order.orderStatus]}`}>
                                                     {order.orderStatus}

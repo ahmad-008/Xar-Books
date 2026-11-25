@@ -14,7 +14,14 @@ export interface User {
     profilePicture?: string;
 }
 
+export interface SalesDay {
+    date: string;
+    orders: number;
+    revenue: number;
+}
+
 export interface AdminStats{
+    salesByDay: SalesDay[];
     users: number;
     booksForSale: number;
     booksSold: number;

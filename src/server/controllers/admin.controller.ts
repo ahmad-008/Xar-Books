@@ -9,11 +9,16 @@ import { Params, readJson } from "../utils/http";
 import { deleteImages, escapeRegex } from "./product.controller";
 
 
+const SALES_DAYS = 30;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 export const getStats = async (req: NextRequest) => {
     await requireAdmin(req);
 
-    const [users, booksForSale, booksSold, statusCounts, paid, recentOrders, recentUsers] = await Promise.all([
+    const today = new Date().toISOString().slice(0,10);
+    const since = new Date(new Date(today).getTime() - (SALES_DAYS - 1) * DAY_MS);
+
+    const [users, booksForSale, booksSold, statusCounts, paid, recentOrders, recentUsers, sales] = await Promise.all([
         User.countDocuments(),
         Product.countDocuments({ isSold: false }),
         Product.countDocuments({ isSold: true }),
@@ -29,7 +34,25 @@ export const getStats = async (req: NextRequest) => {
         User.find().sort({createdAt: -1})
         .limit(10)
         .select("name email role createdAt").lean(),
+        Order.aggregate<{_id: string; orders: number; revenue: number}>([
+            { $match: {createdAt:{$gte: since}}},
+            {
+                $group: {
+                    _id: { $dateToString:{format: "%Y-%m-%d", date: "$createdAt"}},
+                    orders: {$sum: 1},
+                    revenue: {$sum:{$cond: [{$eq: ["$paymentStatus", "paid"]}, "$totalAmount", 0]}},
+                },
+            },
+
+            
+        ]),
     ]);
+
+    const salesByDay = Array.from({length: SALES_DAYS}, (_, index) => {
+        const date = new Date(since.getTime() +  index * DAY_MS ).toISOString().slice(0, 10);
+        const day = sales.find((item) =>item._id === date);
+        return {date, orders: day?.orders ?? 0, revenue: day?.revenue ?? 0};
+    });
 
     const ordersByStatus = { processing: 0, shipped: 0, delivered: 0, cancelled: 0 };
     for (const { _id, count } of statusCounts) {
@@ -46,7 +69,8 @@ export const getStats = async (req: NextRequest) => {
             ordersByStatus,
             revenue: paid[0]?.total ?? 0,
             recentOrders,
-            recentUsers
+            recentUsers,
+            salesByDay,
         },
     });
 };
