@@ -3,3 +3,5 @@ import "./Product";
 import "./Cart";
 import "./Wishlist";
 import "./Order";
+import "./ActivityLog";
+

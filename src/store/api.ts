@@ -156,6 +156,21 @@ export interface AdminOrder extends Omit<Order, "items">{
     items: (Omit<OrderItem, "seller"> & {seller: {name: string} | null})[];
 }
 
+export interface AdminActivity {
+    _id: string;
+    admin: {name: string} | null;
+    action: "remove_book"| "block_user" | "unblock_user" | "cancel_order" | "deliver_order";
+    targetId :string;
+    label: string;
+    createdAt: string;
+}
+
+interface AdminActivityResponse {
+    success: boolean;
+    data: AdminActivity[];
+    pagination: { page: number; limit: number; total: number; pages: number };
+}
+
 interface AdminOrderResponse {
     success: boolean;
     data: AdminOrder;
@@ -405,6 +420,11 @@ export const api = createApi({
             invalidatesTags: ["Order"],
         }),
 
+        getAdminActivity: builder.query<AdminActivityResponse, number>({
+            query: (page) => `/admin/activity?page=${page}`,
+        }),
+
+
         getMyOrders: builder.query<OrderListResponse, void>({
             query: () => "/orders",
             providesTags: ["Order"],
@@ -480,6 +500,7 @@ export const {
     useGetAdminOrderQuery,
     useAdminCancelOrderMutation,
     useAdminDeliverOrderMutation,
+    useGetAdminActivityQuery,
     useRegisterMutation,
     useLoginMutation,
     useLogoutMutation,
