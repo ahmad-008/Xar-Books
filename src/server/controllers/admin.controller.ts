@@ -9,6 +9,8 @@ import { Params, readJson } from "../utils/http";
 import { deleteImages, escapeRegex } from "./product.controller";
 import { cancelCodOrder } from "../jobs/cancelStaleCodOrders";
 import { markDelivered } from "../jobs/autoConfirmDelivery";
+import { ActivityLog } from "../models/ActivityLog";
+import { logActivity } from "../utils/activity";
 
 
 const SALES_DAYS = 30;
@@ -78,7 +80,7 @@ export const getStats = async (req: NextRequest) => {
 };
 
 export const removeProduct = async (req: NextRequest, {id}: Params) => {
-    await requireAdmin(req);
+     const adminId = await requireAdmin(req);
 
     if(!isValidObjectId(id)){
         throw new AppError("Book not found", 404);
@@ -90,6 +92,7 @@ export const removeProduct = async (req: NextRequest, {id}: Params) => {
     }
 
     await deleteImages(product.images);
+    await logActivity(adminId, "remove_book", id, product.title);
 
     return NextResponse.json({
         success: true, 
@@ -169,7 +172,7 @@ export const getUsers = async (req: NextRequest) => {
 };
 
 export const setUserBlocked = async (req: NextRequest, {id}: Params) =>{
-    await requireAdmin(req);
+     const adminId = await requireAdmin(req);
     const {blocked} = await readJson(req);
 
     if(typeof blocked !== "boolean"){
@@ -184,6 +187,7 @@ export const setUserBlocked = async (req: NextRequest, {id}: Params) =>{
     if (!user){
         throw new AppError("User not found, or is an admin", 404);
     }
+    await logActivity(adminId, blocked ? "block_user": "unblock_user", id, user.email);
      return NextResponse.json({ success: true, message: blocked ? "User blocked" : "User unblocked" });
 };
 
@@ -209,7 +213,7 @@ export const getOrderDetails = async (req: NextRequest, {id}: Params)=>{
 };
 
 export const adminCancelOrder = async (req: NextRequest, { id }: Params) => {
-    await requireAdmin(req);
+   const adminId = await requireAdmin(req);
 
     if (!isValidObjectId(id)) {
         throw new AppError("Order not found", 404);
@@ -218,12 +222,13 @@ export const adminCancelOrder = async (req: NextRequest, { id }: Params) => {
     if (!(await cancelCodOrder(id))) {
         throw new AppError("Only unpaid cash-on-delivery orders that haven't shipped can be cancelled", 400);
     }
+    await logActivity(adminId, "cancel_order", id, `Order #${id.slice(-6)}`);
 
     return NextResponse.json({ success: true, message: "Order cancelled" });
 };
 
 export const adminDeliverOrder = async (req: NextRequest, {id}: Params) => {
-    await requireAdmin(req);
+    const adminId = await requireAdmin(req);
 
     if(!isValidObjectId(id)){
         throw new AppError("Order not found", 404);
@@ -232,5 +237,31 @@ export const adminDeliverOrder = async (req: NextRequest, {id}: Params) => {
     if((await markDelivered({_id: id})) === 0){
         throw new AppError("Only shipped orders can be marked as delivered", 400);
     }
+    await logActivity(adminId, "deliver_order", id, `Order #${id.slice(-6)}`);
+
     return NextResponse.json({ success: true, message: "Order marked as delivered" });
+};
+
+export const getActivity = async (req: NextRequest)=> {
+    await requireAdmin(req);
+
+    const page = Math.max(1, Math.floor(Number(req.nextUrl.searchParams.get("page"))) || 1 );
+    const limit = 20;
+
+    const [activity, total] = await Promise.all([
+        ActivityLog.find()
+        .sort({createdAt: -1})
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .populate("admin", "name")
+        .lean(),
+
+        ActivityLog.countDocuments(),
+    ]);
+
+    return NextResponse.json({
+        success: true,
+        data: activity,
+        pagination: {page, limit, total, pages: Math.ceil(total / limit)},
+    });
 };
