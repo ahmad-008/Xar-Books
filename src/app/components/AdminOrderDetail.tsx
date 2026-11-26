@@ -43,7 +43,7 @@ export default function AdminOrderDetail({ id }: { id: string }) {
     const order = data.data;
     const address = order.shippingAddress;
     const hasShipped = order.items.some((item) => item.status === "shipped" || item.status === "delivered");
-    const canCancel = order.paymentMethod === "COD" && order.paymentStatus === "pending" && order.orderStatus === "processing" && !hasShipped;
+    const canCancel = order.orderStatus === "processing" && !hasShipped && (order.paymentMethod === "Card" || order.paymentStatus === "pending");
     const canDeliver = order.orderStatus === "shipped";
 
     const confirmAndRun = async (question: string, action: () => Promise<{ message: string }>) => {
@@ -56,13 +56,10 @@ export default function AdminOrderDetail({ id }: { id: string }) {
         }
     };
 
-    const note =
-        order.paymentMethod === "Card" && order.paymentStatus === "paid" && order.orderStatus === "processing"
-            ? "Paid by card, so it can't be cancelled here yet."
-            : order.paymentMethod === "Card" && order.paymentStatus === "pending"
-              ? "Waiting for card payment. If it isn't paid, it's cancelled when the checkout expires."
-              : "Nothing to do for this order right now.";
-
+    const cancelQuestion =
+        order.paymentMethod === "Card" && order.paymentStatus === "paid"
+            ? `Cancel this order and refund $${order.totalAmount.toFixed(2)} to the buyer's card?`
+            : "Cancel this order? Its books go back on sale.";
     return (
         <div className="space-y-6">
             <Link href="/admin/orders" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
@@ -145,7 +142,7 @@ export default function AdminOrderDetail({ id }: { id: string }) {
                                 <Button
                                     variant="outline"
                                     disabled={isCancelling}
-                                    onClick={() => confirmAndRun("Cancel this order? Its books go back on sale.", () => cancelOrder(order._id).unwrap())}
+                                    onClick={() => confirmAndRun(cancelQuestion, () => cancelOrder(order._id).unwrap())}
                                     className="text-red-600"
                                 >
                                     Cancel order
@@ -161,7 +158,7 @@ export default function AdminOrderDetail({ id }: { id: string }) {
                             )}
                         </div>
                     ) : (
-                        <p className="text-sm text-muted-foreground">{note}</p>
+                        <p className="text-sm text-muted-foreground">Nothing to do for this order right now.</p>
                     )}
                     <p className="text-xs text-muted-foreground">The daily job also cancels unpaid cash-on-delivery orders after 7 days and confirms delivery 14 days after shipping.</p>
                 </CardContent>
