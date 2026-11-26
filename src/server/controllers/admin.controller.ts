@@ -7,6 +7,8 @@ import { isValidObjectId } from "mongoose";
 import { AppError } from "../utils/AppError";
 import { Params, readJson } from "../utils/http";
 import { deleteImages, escapeRegex } from "./product.controller";
+import { cancelCodOrder } from "../jobs/cancelStaleCodOrders";
+import { markDelivered } from "../jobs/autoConfirmDelivery";
 
 
 const SALES_DAYS = 30;
@@ -183,4 +185,52 @@ export const setUserBlocked = async (req: NextRequest, {id}: Params) =>{
         throw new AppError("User not found, or is an admin", 404);
     }
      return NextResponse.json({ success: true, message: blocked ? "User blocked" : "User unblocked" });
+};
+
+
+export const getOrderDetails = async (req: NextRequest, {id}: Params)=>{
+    await requireAdmin(req);
+
+    if(!isValidObjectId(id)){
+        throw new AppError("Order not found", 404);
+    }
+
+    const order = await Order.findById(id)
+        .select("-stripeSessionId -paymentIntentId")
+        .populate("buyer", "name email")
+        .populate("items.seller", "name")
+        .lean();
+
+    if (!order) {
+        throw new AppError("Order not found", 404);
+    }    
+
+    return NextResponse.json({success: true, data: order});
+};
+
+export const adminCancelOrder = async (req: NextRequest, { id }: Params) => {
+    await requireAdmin(req);
+
+    if (!isValidObjectId(id)) {
+        throw new AppError("Order not found", 404);
+    }
+
+    if (!(await cancelCodOrder(id))) {
+        throw new AppError("Only unpaid cash-on-delivery orders that haven't shipped can be cancelled", 400);
+    }
+
+    return NextResponse.json({ success: true, message: "Order cancelled" });
+};
+
+export const adminDeliverOrder = async (req: NextRequest, {id}: Params) => {
+    await requireAdmin(req);
+
+    if(!isValidObjectId(id)){
+        throw new AppError("Order not found", 404);
+    }
+
+    if((await markDelivered({_id: id})) === 0){
+        throw new AppError("Only shipped orders can be marked as delivered", 400);
+    }
+    return NextResponse.json({ success: true, message: "Order marked as delivered" });
 };
