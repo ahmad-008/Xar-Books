@@ -151,8 +151,14 @@ export interface Order {
 }
 
 export interface AdminOrder extends Omit<Order, "items">{
+    shippedAt?: string;
     buyer: {name: string; email: string} | null;
     items: (Omit<OrderItem, "seller"> & {seller: {name: string} | null})[];
+}
+
+interface AdminOrderResponse {
+    success: boolean;
+    data: AdminOrder;
 }
 
 interface AdminOrdersResponse{
@@ -384,6 +390,21 @@ export const api = createApi({
             invalidatesTags: ["User", "Product"],
         }),
 
+        getAdminOrder: builder.query<AdminOrderResponse, string>({
+            query: (id) => `/admin/orders/${id}`,
+            providesTags: ["Order"],
+        }),
+
+        adminCancelOrder: builder.mutation<MessageResponse, string>({
+            query: (id) => ({url: `/admin/orders/${id}/cancel`, method: "POST"}),
+            invalidatesTags: ["Order", "Product"],
+        }),
+
+        adminDeliverOrder:  builder.mutation<MessageResponse, string>({
+            query: (id) => ({url: `/admin/orders/${id}/deliver`, method: "POST"}),
+            invalidatesTags: ["Order"],
+        }),
+
         getMyOrders: builder.query<OrderListResponse, void>({
             query: () => "/orders",
             providesTags: ["Order"],
@@ -456,6 +477,9 @@ export const {
     useGetAdminOrdersQuery,
     useGetAdminUsersQuery,
     useSetUserBlockedMutation,
+    useGetAdminOrderQuery,
+    useAdminCancelOrderMutation,
+    useAdminDeliverOrderMutation,
     useRegisterMutation,
     useLoginMutation,
     useLogoutMutation,

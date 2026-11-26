@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Fragment, useState } from "react";
 import { ChevronDown, ChevronUp, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -114,6 +115,9 @@ export default function AdminOrders() {
                                                         </ul>
                                                         <p className="text-muted-foreground">
                                                             Ship to: {order.shippingAddress.fullName}, {order.shippingAddress.city}, {order.shippingAddress.country}
+                                                        </p>
+                                                        <p>
+                                                            <Link href={`/admin/orders/${order._id}`} className="font-medium text-orange-700 hover:underline">Open order page</Link>
                                                         </p>
                                                     </td>
                                                 </tr>
