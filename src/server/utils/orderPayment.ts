@@ -99,8 +99,8 @@ export const syncCheckout = async (order: HydratedDocument<IOrder>) => {
     return {order: (await Order.findById(order._id)) ?? order, session};
 }; 
 
-export const cancelOrderByBuyer = async (orderId: string, buyerId: string) => {
-    const order = await Order.findOne({ _id: orderId, buyer: buyerId });
+export const cancelOrderWithRefund = async (orderId: string, buyerId?: string) => {
+    const order = await Order.findOne(buyerId ? {_id: orderId, buyer: buyerId} : {_id: orderId});
     if (!order) {
         throw new AppError("Order not found", 404);
     }

@@ -7,7 +7,7 @@ import { User } from "../models/User";
 import { AppError } from "../utils/AppError";
 import { requireUserId } from "../utils/auth";
 import { Params, appUrl, readJson } from "../utils/http";
-import { cancelOrderByBuyer, createCheckoutSession, releaseOrder, syncCheckout } from "../utils/orderPayment";
+import { cancelOrderWithRefund, createCheckoutSession, releaseOrder, syncCheckout } from "../utils/orderPayment";
 import { blockedUserIds } from "../utils/blockedUsers";
 
 const ADDRESS_FIELDS = [
@@ -186,7 +186,7 @@ export const cancelOrder = async (req: NextRequest, { id }: Params) => {
         throw new AppError("Order not found", 404);
     }
 
-    const order = await cancelOrderByBuyer(id, userId);
+    const order = await cancelOrderWithRefund(id, userId);
     const message = order.paymentStatus === "refunded"
         ? "Order cancelled. Your refund is on its way"
         : "Order cancelled";

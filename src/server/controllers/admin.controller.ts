@@ -11,6 +11,7 @@ import { cancelCodOrder } from "../jobs/cancelStaleCodOrders";
 import { markDelivered } from "../jobs/autoConfirmDelivery";
 import { ActivityLog } from "../models/ActivityLog";
 import { logActivity } from "../utils/activity";
+import { cancelOrderWithRefund } from "../utils/orderPayment";
 
 
 const SALES_DAYS = 30;
@@ -219,12 +220,22 @@ export const adminCancelOrder = async (req: NextRequest, { id }: Params) => {
         throw new AppError("Order not found", 404);
     }
 
-    if (!(await cancelCodOrder(id))) {
-        throw new AppError("Only unpaid cash-on-delivery orders that haven't shipped can be cancelled", 400);
+
+    const order = await Order.findById(id).select("paymentMethod");
+    if (!order){
+        throw new AppError("Order not found", 404);
+    }
+
+    let message = "Order cancelled";
+    if(order.paymentMethod === "Card"){
+        const cancelled = await cancelOrderWithRefund(id);
+        if (cancelled.paymentStatus === "refunded") message = "Order cancelled and refunded";
+    } else if(!(await cancelCodOrder(id))){
+        throw new AppError("Only cash-on-delivery orders that are unpaid and haven't shipped can be cancelled", 400);
     }
     await logActivity(adminId, "cancel_order", id, `Order #${id.slice(-6)}`);
 
-    return NextResponse.json({ success: true, message: "Order cancelled" });
+      return NextResponse.json({ success: true, message });
 };
 
 export const adminDeliverOrder = async (req: NextRequest, {id}: Params) => {
