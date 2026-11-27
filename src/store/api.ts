@@ -159,7 +159,7 @@ export interface AdminOrder extends Omit<Order, "items">{
 export interface AdminActivity {
     _id: string;
     admin: {name: string} | null;
-    action: "remove_book"| "block_user" | "unblock_user" | "cancel_order" | "deliver_order";
+    action: "remove_book"| "block_user" | "unblock_user" | "cancel_order" | "deliver_order" | "edit_book";
     targetId :string;
     label: string;
     createdAt: string;

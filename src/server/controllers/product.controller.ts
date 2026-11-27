@@ -8,6 +8,7 @@ import { Params, readJson } from "../utils/http";
 import { checkPrices } from "../utils/validate";
 import { MAX_FILES, checkImage, deleteImage, readImages, uploadImage } from "../utils/uploadImage";
 import { blockedUserIds } from "../utils/blockedUsers";
+import { logActivity } from "../utils/activity";
 
 const toNumber = (value: unknown) =>
     typeof value === "string" && value.trim() !== "" ? Number(value) : NaN;
@@ -171,6 +172,12 @@ export const deleteProduct = async (req: NextRequest, { id }: Params) => {
 const TEXT_FIELDS = ["title", "subject", "category", "condition", "classType","author","edition","description"] as const;
 const OPTIONAL_FIELDS =["author","edition", "description"];
 const NUMBER_FIELDS = ["price", "finalPrice","shippingCharge"] as const;
+const findEditable = async (userId: string, id: string) => {
+    const user = await User.findById(userId).select("role");
+    const isAdmin = user?.role === "admin";
+    const product = await Product.findOne(isAdmin ? {_id: id} : {_id: id, seller: userId});
+    return {product, isAdmin};
+};
 
 export const updateProduct = async (req: NextRequest, { id }: Params) => {
     const userId = await requireUserId(req);
@@ -179,7 +186,7 @@ export const updateProduct = async (req: NextRequest, { id }: Params) => {
         throw new AppError("Book not found", 404);
     }
 
-    const product = await Product.findOne({ _id: id, seller: userId });
+    const {product, isAdmin} = await findEditable(userId, id);
     if (!product) {
         throw new AppError("Book not found", 404);
     }
@@ -216,6 +223,7 @@ export const updateProduct = async (req: NextRequest, { id }: Params) => {
     checkPrices(product.price, product.finalPrice, product.shippingCharge);
 
     await product.save();
+    if(isAdmin) await logActivity(userId, "edit_book", id, product.title);
 
     return NextResponse.json({ success: true, message: "Book updated", data: product });
 };
@@ -237,7 +245,7 @@ export const updateProductImages = async (req: NextRequest, { id }: Params) => {
         throw new AppError("Book not found", 404);
     }
 
-    const product = await Product.findOne({_id: id, seller: userId});
+    const { product } = await findEditable(userId, id);
     if(!product){
         throw new AppError("Book not found", 404);
     }

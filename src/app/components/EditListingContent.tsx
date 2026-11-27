@@ -10,7 +10,7 @@ import { RootState } from "@/store/store";
 import NoData from "./NoData";
 import SellBookForm from "./SellBookForm";
 
-export default function EditListingContent() {
+export default function EditListingContent({doneUrl="/account/selling-products"}: {doneUrl?: string}) {
     const { id } = useParams<{ id: string }>();
     const user = useSelector((state: RootState) => state.user.user);
     const { data, isLoading, isError } = useGetProductQuery(id, {
@@ -33,7 +33,8 @@ export default function EditListingContent() {
     const product = data?.data;
     const sellerId = typeof product?.seller === "string" ? product.seller : product?.seller._id;
 
-    if (isError || !product || sellerId !== user.id) {
+    const canEdit = sellerId === user.id || user.role === "admin";
+    if (isError || !product || !canEdit) {
         return <NoData message="Listing not found" description="This book doesn't exist or isn't yours." />;
     }
 
@@ -42,11 +43,11 @@ export default function EditListingContent() {
             <div className="space-y-4 text-center">
                 <NoData message="This book is sold" description="A sold book can't be edited." />
                 <Button asChild className="rounded-md normal-case tracking-normal">
-                    <Link href="/account/selling-products">Back to my listings</Link>
+                    <Link href={doneUrl}>Back to my listings</Link>
                 </Button>
             </div>
         );
     }
 
-    return <SellBookForm key={product._id} product={product} />;
+    return <SellBookForm key={product._id} product={product} doneUrl={doneUrl}/>;
 }

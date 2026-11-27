@@ -14,6 +14,7 @@ const ACTION_TEXT: Record<Activity["action"], string> = {
     unblock_user: "Unblocked a user",
     cancel_order: "Cancelled an order",
     deliver_order: "Marked an order delivered",
+    edit_book: "Edited a book",
 };
 
 export default function AdminActivity() {

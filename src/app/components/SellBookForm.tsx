@@ -132,7 +132,7 @@ export default function SellBookForm({product, doneUrl = "/account/selling-produ
                     },
                 }).unwrap();
                 toast.success(result.message ?? "Book updated");
-                router.push("/account/selling-products");
+                router.push(doneUrl);
             } catch (error) {
                 toast.error(getErrorMessage(error));
             }

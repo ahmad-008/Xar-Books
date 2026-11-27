@@ -1,6 +1,6 @@
 import {Schema, Types, model, Model, models} from "mongoose";
 
-export const ACTIVITY_ACTIONS = ["remove_book", "block_user", "unblock_user", "cancel_order","deliver_order"] as const;
+export const ACTIVITY_ACTIONS = ["remove_book", "block_user", "unblock_user", "cancel_order","deliver_order", "edit_book"] as const;
 
 
 export interface IActivityLog {
