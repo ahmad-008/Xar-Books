@@ -66,6 +66,26 @@ export const releaseOrder = async (orderId: Types.ObjectId | string) => {
     });
 };
 
+export const markOrderRefunded = async (paymentIntentId: string) => {
+    await mongoose.connection.transaction(async (session) => {
+        const order = await Order.findOneAndUpdate(
+            { paymentIntentId, paymentStatus: "paid" },
+            { $set: { paymentStatus: "refunded" } },
+            { session, returnDocument: "after" }
+        );
+
+        const hasShipped = order?.items.some((item) => item.status === "shipped" || item.status === "delivered");
+        if (!order || order.orderStatus !== "processing" || hasShipped) return;
+
+        await Order.updateOne({ _id: order._id }, { $set: { orderStatus: "cancelled" } }, { session });
+        await Product.updateMany(
+            { _id: { $in: order.items.filter((item) => item.status !== "cancelled").map((item) => item.product) } },
+            { $set: { isSold: false } },
+            { session }
+        );
+    });
+};
+
 const paymentIntentOf = (session: Stripe.Checkout.Session) =>
     typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
 

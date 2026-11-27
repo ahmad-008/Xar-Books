@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getStripe } from "../config/stripe";
 import { Order } from "../models/Order";
-import { releaseOrder } from "../utils/orderPayment";
+import { markOrderRefunded, releaseOrder } from "../utils/orderPayment";
 
 const reject = (message: string) => NextResponse.json({ success: false, message }, { status: 400 });
 
@@ -40,6 +40,14 @@ export const stripeWebhook = async (req: NextRequest) => {
         const order = await Order.findOne({ stripeSessionId: event.data.object.id });
         if (order) {
             await releaseOrder(order._id);
+        }
+    }
+
+    if (event.type === "charge.refunded" && event.data.object.refunded){
+        const intent = event.data.object.payment_intent;
+        const paymentIntentId = typeof intent === "string" ? intent : intent?.id;
+        if(paymentIntentId) {
+            await markOrderRefunded(paymentIntentId);
         }
     }
 
