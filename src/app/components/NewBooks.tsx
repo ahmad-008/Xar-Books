@@ -75,7 +75,7 @@ function NewBooks() {
                                                                         alt={book.title}
                                                                         width={200}
                                                                         height={300}
-                                                                        className='mb-4 h-50 w-full object-cover rounded-md'
+                                                                        className='mb-4 h-50 w-full rounded-md bg-gray-100 object-contain p-2'
                                                                     >
                                                                     </Image>
                                                                     {discountPercent(book.price, book.finalPrice) > 0 && (

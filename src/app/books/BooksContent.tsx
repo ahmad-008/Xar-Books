@@ -20,7 +20,7 @@ import NoData from "../components/NoData";
 
 type FilterKey = "condition" | "classType" | "category";
 
-const BOOKS_PER_PAGE = 6;
+const BOOKS_PER_PAGE = 12;
 
 const filterGroups: { key: FilterKey; label: string }[] = [
     { key: "condition", label: "Condition" },
@@ -94,7 +94,7 @@ const BooksContent = () => {
                 <h1 className="mb-8 text-3xl font-bold">Browse used books</h1>
 
 
-                <div className="grid gap-8 md:grid-cols-[280px_1fr]" >
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-[280px_minmax(0,1fr)]" >
                     {/* Filters sidebar */}
                     <aside className="space-y-4" >
                         <Accordion type="multiple" defaultValue={filterGroups.filter(({key})=> selectedFilters[key].length> 0).map(({key}) => key)}  className="rounded-xl bg-white p-4 shadow-sm" >
@@ -129,8 +129,8 @@ const BooksContent = () => {
 
 
                     {/* Books */}
-                    <section>
-                        <div className="mb-6 flex items-center justify-between" >
+                    <section className="min-w-0">
+                        <div className="mb-6 flex flex-wrap items-center justify-between gap-3" >
                             <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground" >
                                 <span>
                                     {total} {total === 1 ? "book" : "books"} found
@@ -171,7 +171,7 @@ const BooksContent = () => {
 
 
                             <>
-                                <div className={`grid gap-6 sm:grid-cols-2 lg:grid-cols-3 ${isFetching ? "opacity-60" : ""}`}>
+                                <div className={`grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 ${isFetching ? "opacity-60" : ""}`}>
 
                                     {products.map((book, index) => {
                                         const discount = discountPercent(book.price, book.finalPrice);
@@ -192,10 +192,11 @@ const BooksContent = () => {
                                                             <Image
                                                                 src={book.images[0] || "/images/no-book.jpg"}
                                                                 alt={book.title}
-                                                                width={400}
-                                                                height={300}
+                                                                width={300}
+                                                                height={400}
+                                                                sizes="(min-width: 1024px) 300px, (min-width: 640px) 45vw, 90vw"
                                                                 loading={index < 3 ? "eager" : "lazy"}
-                                                                className="h-56 w-full object-cover"
+                                                                className="h-64 w-full bg-gray-100 object-contain p-3"
                                                             />
                                                             {discount > 0 && (
                                                                 <span className="absolute left-0 top-2 rounded-r-lg bg-red-500 px-2 py-1 text-xs font-medium text-white" >
