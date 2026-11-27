@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { Plus, Search, Trash2 } from "lucide-react";
+import { Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -91,7 +91,13 @@ export default function AdminBooks() {
                                         <td className="py-2 pr-4">{typeof book.seller === "object" && book.seller ? book.seller.name : "Deleted user"}</td>
                                         <td className="py-2 pr-4">${book.finalPrice.toFixed(2)}</td>
                                         <td className="py-2 pr-4">{new Date(book.createdAt).toLocaleDateString()}</td>
-                                        <td className="py-2">
+                                        <td className="flex gap-2 py-2">
+                                            <Button asChild variant="outline" size="sm">
+                                                <Link href={`/admin/books/${book._id}/edit`}>
+                                                    <Pencil className="h-4 w-4" />
+                                                    Edit
+                                                </Link>
+                                            </Button>
                                             <Button variant="outline" size="sm" disabled={isRemoving} onClick={() => handleRemove(book._id, book.title)} className="text-red-600">
                                                 <Trash2 className="h-4 w-4" />
                                                 Remove
