@@ -10,6 +10,7 @@ import { getErrorMessage } from "@/lib/getErrorMessage";
 import { STATUS_STYLES } from "@/lib/orderStatus";
 import { useAdminCancelOrderMutation, useAdminDeliverOrderMutation, useGetAdminOrderQuery } from "@/store/api";
 import NoData from "./NoData";
+import PaymentBadge from "./PaymentBadge";
 
 const formatDate = (date: string) => new Date(date).toLocaleString();
 
@@ -87,7 +88,10 @@ export default function AdminOrderDetail({ id }: { id: string }) {
                 <Card className="gap-0 py-0 shadow-sm">
                     <CardContent className="space-y-1 p-5 text-sm">
                         <h2 className="mb-2 font-semibold">Payment</h2>
-                        <p>{order.paymentMethod} · <span className="capitalize">{order.paymentStatus}</span></p>
+                        <p>{order.paymentMethod} · <PaymentBadge status={order.paymentStatus}/></p>
+                        {order.paymentStatus === "refunded" && (
+                            <p className="text-purple-700">${order.totalAmount.toFixed(2)} refunded to the buyer&apos;s card</p>
+                        )}
                         <p className="text-muted-foreground">Books ${order.itemsTotal.toFixed(2)} + shipping ${order.shippingTotal.toFixed(2)}</p>
                         <p className="font-medium">Total ${order.totalAmount.toFixed(2)}</p>
                     </CardContent>

@@ -58,7 +58,7 @@ const ErrorText = ({ message }: { message?: string }) =>
     message ? <p className="mt-1 text-sm text-red-500" >{message}</p> : null;
 
 
-export default function SellBookForm({ product }: { product?: Product }) {
+export default function SellBookForm({product, doneUrl = "/account/selling-products"} : {product?: Product; doneUrl?: string}) {
     const isEditing = Boolean(product);
     const user = useSelector((state: RootState) => state.user.user);
     const [images, setImages] = useState<PickedImage[]>(
@@ -151,7 +151,7 @@ export default function SellBookForm({ product }: { product?: Product }) {
             toast.success(result.message ?? "Book listed for sale");
             reset(emptyForm);
             setImages([]);
-            router.push("/account/selling-products");
+            router.push(doneUrl);
         } catch (error) {
             toast.error(getErrorMessage(error));
         }
