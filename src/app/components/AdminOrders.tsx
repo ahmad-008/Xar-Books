@@ -11,6 +11,7 @@ import { STATUS_STYLES } from "@/lib/orderStatus";
 import { useGetAdminOrdersQuery } from "@/store/api";
 import NoData from "./NoData";
 import Pagination from "./Pagination";
+import PaymentBadge from "./PaymentBadge";
 
 const STATUSES = ["", "processing", "shipped", "delivered", "cancelled"] as const;
 
@@ -90,7 +91,7 @@ export default function AdminOrders() {
                                                     <p className="text-xs text-muted-foreground">{order.buyer?.email}</p>
                                                 </td>
                                                 <td className="py-2 pr-4">${order.totalAmount.toFixed(2)}</td>
-                                                <td className="py-2 pr-4">{order.paymentMethod} · <span className="capitalize">{order.paymentStatus}</span></td>
+                                                <td className="py-2 pr-4">{order.paymentMethod} · <PaymentBadge status={order.paymentStatus}/></td>
                                                 <td className="py-2 pr-4">
                                                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${STATUS_STYLES[order.orderStatus]}`}>{order.orderStatus}</span>
                                                 </td>

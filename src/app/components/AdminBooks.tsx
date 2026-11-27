@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { Search, Trash2 } from "lucide-react";
+import { Plus, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,9 +41,17 @@ export default function AdminBooks() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold">Books</h1>
-                <p className="text-sm text-muted-foreground">{data?.pagination?.total ?? 0} for sale</p>
+            <div className="flex items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold">Books</h1>
+                    <p className="text-sm text-muted-foreground">{data?.pagination?.total ?? 0} for sale</p>
+                </div>
+                <Button asChild>
+                    <Link href="/admin/books/new">
+                        <Plus className="h-4 w-4" />
+                        Add book
+                    </Link>
+                </Button>
             </div>
 
             <form onSubmit={handleSearch} className="flex max-w-md gap-2">
